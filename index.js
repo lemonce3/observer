@@ -15,10 +15,6 @@ app.use(bodyparser());
 app.use(router.routes());
 app.use(serve(path.resolve(config.static.path)));
 
-app.context.programCache = new LRU({
-	maxAge: 5 * 60 * 1000
-});
-
 app.listen(config.http.port, config.http.host);
 
 setInterval(() => process.emit('app-gc', Date.now()), GC_INTERVAL);

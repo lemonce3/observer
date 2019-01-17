@@ -3,7 +3,8 @@ const fs = require('fs');
 const path = require('path');
 const sha1 = require('hash.js').sha1;
 
-const { Agent, Window } = require('../class/agent');
+const { Agent } = require('../class/agent');
+const { Window } = require('../class/window');
 const cache = require('../cache');
 
 const router = module.exports = new Router({ prefix: '/agent' });
@@ -40,20 +41,17 @@ router.param('agentId', (id, ctx, next) => {
 	ctx.agent = agent;
 
 	return next();
-}).get('/fetch.html', ctx => {
+}).get('/fetch', ctx => {
 	const agentId = ctx.cookies.get(COOKIE_KEY);
 	//TODO 可以通过query创建带有meta数据的agent用于标识资源角色
 
-	if (!agentId || !cache.agent.has(agentId)) {
-		const newAgentId = sha1().update(new Date().toISOString()).digest('hex');
-		const newAgent = new Agent(newAgentId);
+	if (!agentId || !cache.agent.get(agentId)) {
+		const newAgent = new Agent();
 
-		cache.agent.set(newAgentId, newAgent);
-		ctx.cookies.set(COOKIE_KEY, newAgentId, { httpOnly: false, maxAge: 0 });
+		cache.agent.set(newAgent.id, newAgent);
+		ctx.cookies.set(COOKIE_KEY, newAgent.id, { httpOnly: false, maxAge: 0 });
 	}
 
 	ctx.response.type = 'text/html; charset=utf-8';
 	ctx.body = fetchHTML;
-}).get('/:agentId', ctx => {
-	ctx.body = ctx.agent;
 }).use('/:agentId', windowRouter.routes());
