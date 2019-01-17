@@ -1,70 +1,115 @@
-const DEFERRED = 30 * 1000;
+const sha1 = require('hash.js').sha1;
+const EventEmitter = require('events');
+
+const IDLE_GC_TIMEOUT = 15000;
 
 class AgentRuntimeError extends Error {}
 class WindowRuntimeError extends Error {}
 
-class Window {
+let count = 0;
+
+class Window extends EventEmitter {
 	constructor() {
-		this.name	= null;
+		super();
+
+		this.id = sha1().update(`${Date.now()}-${count++}`).digest('hex');
+		this.name = null;
 		this.program = null;
+		this.pointer = { x: 0, y: 0 };
+		this.lastVisited = Date.now();
+
+		process.on('app-gc', now => {
+			if (this.lastVisited + IDLE_GC_TIMEOUT < now) {
+				this.destroy();
+			}
+		});
 	}
 	
-	get isBusy() {
-		return this.program !== null;
-	}
-
-	putProgram(program, timeout = 3000) {
-		if (isBusy) {
+	setProgram(program) {
+		if (this.program !== null) {
 			throw new WindowRuntimeError('The window is busy.');
 		}
 
 		this.program = program;
 
-		program.on('return', () => this.program = null);
-		setTimeout(() => this.program = null, timeout);
+		program.on('return', () => this.resetProgram());
+		program.on('error', () => this.resetProgram());
+
+		this.visit();
+	}
+
+	resetProgram() {
+		this.program = null;
+
+		this.visit();
 	}
 
 	setName(name) {
-		return this.name = name;
+		if (this.name === null) {
+			this.name = name;
+		}
+
+		throw new WindowRuntimeError('Window could not be set name one more time.');
+	}
+
+	visit() {
+		this.lastVisited = Date.now();
+	}
+
+	destroy() {
+		this.emit('destroy');
 	}
 }
 
 class Agent {
-	constructor() {
+	constructor(id) {
 		this.master = null;
-		this.id = null;
-		this.lastRequestTime = Date.now();
+		this.id = id;
 
 		this.window = {
-			focus: null,
-			list: []
+			list: [],
+			idIndex: {},
+			nameIndex: {}
 		};
 
 		this.master = null;
 	}
 
-	get isActive() {
-		return Date.now() > this.lastRequestTime + DEFERRED;
-	}
-
-	fetch() {
-		this.lastRequestTime = Date.now();
-
-		return this.programQueue.shift() || null;
-	}
-
-	push(program, window = this.window[0]) {
-		if (!this.isActive) {
-			throw new AgentRuntimeError(`The agent id:${this.id} is inactive.`);
+	queryWindow({ index, name }) {
+		if (index) {
+			return this.window.list[index];
 		}
 
-		if (!window) {
-			throw new AgentRuntimeError('No active window for this agent');
+		if (name) {
+			return this.window.mapping[name];
 		}
 
-		this.window.programQueue(program);
+		throw new AgentRuntimeError('Invali query.');
+	}
 
-		return program;
+	getWindow(id) {
+		return this.window.idIndex[id];
+	}
+
+	setWindowName(windowId, name) {
+		const window = this.window.nameIndex[name] = this.getWindow(windowId);
+
+		window.setName(name);
+	}
+
+	appendWindow(window) {
+		this.window.list.push(window);
+		this.window.idIndex[window.id] = window;
+	}
+
+	removeWindow(id) {
+		const window = this.getWindow(id);
+
+		delete this.window.idIndex[id];
+
+		if (window.name) {
+			delete this.window.nameIndex[window.name];
+		}
 	}
 
 	bind(master) {
@@ -74,10 +119,17 @@ class Agent {
 	unbind() {
 		this.master = null;
 	}
+
+	execute(program, windowQuery = { index: 0 }) {
+		this.getWindow(windowQuery).setProgram(program);
+
+		return program;
+	}
 }
 
 module.exports = {
 	Agent,
 	Window,
-	AgentRuntimeError
+	AgentRuntimeError,
+	WindowRuntimeError
 };

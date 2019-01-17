@@ -1,5 +1,5 @@
 {
-  "name": "observer",
+  "name": "@lc3/observer",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/lemonce3/observer#readme",
   "dependencies": {
+    "cookie": "^0.3.1",
     "hash.js": "^1.1.7",
     "koa": "^2.6.2",
     "koa-bodyparser": "^4.2.1",
@@ -25,5 +26,8 @@
     "koa-static": "^5.0.0",
     "lodash": "^4.17.11",
     "lru-cache": "^5.1.1"
+  },
+  "devDependencies": {
+    "mocha": "^5.2.0"
   }
 }

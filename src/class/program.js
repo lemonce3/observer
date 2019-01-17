@@ -4,7 +4,9 @@ const sha1 = require('hash.js').sha1;
 let count = 0;
 
 class Program extends EventEmitter {
-	constructor(name, args = []) {
+	constructor(name, args = [], timout = 3000) {
+		super();
+
 		this.id = sha1().update(`${Date.now()}-${count++}`).digest('hex');
 
 		this.name = name;
@@ -12,6 +14,8 @@ class Program extends EventEmitter {
 
 		this.returnValue = null;
 		this.error = null;
+
+		setTimeout(() => this.setError(), timout);
 	}
 
 	get isPending() {
@@ -35,7 +39,7 @@ class ProgramReturnValue {
 }
 
 class ProgramError {
-	constructor(message, stack, type) {
+	constructor(type, message, stack) {
 		this.type = type;
 		this.message = message;
 		this.stack = stack;
@@ -43,7 +47,6 @@ class ProgramError {
 }
 
 module.exports = {
-	NOT_RETURN,
 	Program,
 	ProgramReturnValue,
 	ProgramError

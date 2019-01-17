@@ -30,8 +30,33 @@ class Master {
 		this.agent = {};
 	}
 
-	execute(agentName, programId) {
+	execute(agentName, program, windowQuery = { index: 0 }) {
+		const agent = this.agent[agentName];
 
+		program.once('error', (error, program) => {
+			console.log('//TODO log');
+		});
+
+		program.once('return', (programReturnValue, program) => {
+
+		});
+
+		agent.execute(program, windowQuery);
+	}
+
+	pushLog(message, namespace = '*') {
+		const newLog = [Date.now(), namespace, message];
+		this.log.push(newLog);
+
+		return newLog;
+	}
+
+	clearLog() {
+		const oldLogList = this.log;
+
+		this.log = [];
+		
+		return oldLogList;
 	}
 }
 

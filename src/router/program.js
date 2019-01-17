@@ -18,7 +18,17 @@ router.param('programId', (id, ctx, next) => {
 		return ctx.status = 102;
 	}
 
-	ctx.body = ctx.program.return;
+	const { error, returnValue } = ctx.program;
+
+	ctx.body = error === null ? {
+		type: 'returnValue',
+		data: returnValue
+	} : {
+		type: 'error',
+		data: error
+	};
+
+	cache.program.del(ctx.program.id);
 }).post('/:programId/return', ctx => {
 	const { isObject, value } = ctx.request.body;
 
@@ -26,7 +36,7 @@ router.param('programId', (id, ctx, next) => {
 		return ctx.status = 400;
 	}
 
-	ctx.program.setReturn(new ProgramReturnValue(value, isObject))
+	ctx.program.setReturn(new ProgramReturnValue(value, isObject));
 }).post('/:programId/error', ctx => {
 	const { type, message, stack } = ctx.request.body;
 
@@ -42,5 +52,5 @@ router.param('programId', (id, ctx, next) => {
 		return ctx.status = 400;
 	}
 
-	ctx.program.setError(new ProgramError(message, stack, type));
+	ctx.program.setError(new ProgramError(type, message, stack));
 });

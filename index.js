@@ -1,7 +1,7 @@
-'use strict';
-
 const path = require('path');
 global.config = require(path.resolve('config.json'));
+
+const GC_INTERVAL = 2000;
 
 const Koa = require('koa');
 const bodyparser = require('koa-bodyparser');
@@ -20,3 +20,5 @@ app.context.programCache = new LRU({
 });
 
 app.listen(config.http.port, config.http.host);
+
+setInterval(() => process.emit('app-gc', Date.now()), GC_INTERVAL);
