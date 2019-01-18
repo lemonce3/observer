@@ -1,4 +1,5 @@
 const sha1 = require('hash.js').sha1;
+const _ = require('lodash');
 
 class AgentRuntimeError extends Error {}
 
@@ -41,15 +42,24 @@ class Agent {
 	appendWindow(window) {
 		this.window.list.push(window);
 		this.window.idIndex[window.id] = window;
+
+		window.once('destroy', () => this.removeWindow(window.id));
 	}
 
 	removeWindow(id) {
-		const window = this.getWindow(id);
+		const removed = this.getWindow(id);
+
+		if (!removed) {
+			throw new AgentRuntimeError(`Window id:${id} has been removed.`);
+		}
 
 		delete this.window.idIndex[id];
+		_.remove(this.window.list, window => {
+			return 	window === removed;
+		});
 
-		if (window.name) {
-			delete this.window.nameIndex[window.name];
+		if (removed.name) {
+			delete this.window.nameIndex[removed.name];
 		}
 	}
 

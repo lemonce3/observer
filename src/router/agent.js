@@ -1,7 +1,6 @@
 const Router = require('koa-router');
 const fs = require('fs');
 const path = require('path');
-const sha1 = require('hash.js').sha1;
 
 const { Agent } = require('../class/agent');
 const { Window } = require('../class/window');
@@ -23,7 +22,7 @@ windowRouter.param('windowId', (id, ctx, next) => {
 
 	return next();
 }).post('/', ctx => {
-	ctx.agent.append(ctx.body = new Window());
+	ctx.agent.appendWindow(ctx.body = new Window());
 }).get('/:windowId', ctx => {
 	ctx.body = ctx.window;
 }).del('/:windowId', ctx => {
