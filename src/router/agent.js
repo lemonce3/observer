@@ -26,7 +26,7 @@ windowRouter.param('windowId', (id, ctx, next) => {
 }).get('/:windowId', ctx => {
 	ctx.body = ctx.window;
 }).del('/:windowId', ctx => {
-	ctx.agent.removeWindow(ctx.params.windowId);
+	ctx.window.destroy();
 	ctx.body = ctx.window;
 });
 

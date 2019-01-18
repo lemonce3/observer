@@ -75,7 +75,6 @@ describe('API-agent', function () {
 			assert(cookieStringReg.test(headers['set-cookie'][0]));
 
 			this.agentId = headers['set-cookie'][0].match(cookieStringReg)[1];
-			this.window = [];
 		});
 
 		setInterval(() => {
@@ -84,7 +83,7 @@ describe('API-agent', function () {
 			});
 		}, 2000);
 
-		it.only('should create a new window', async () => {
+		it('should create a new window', async () => {
 			const response = await agentAxios.post(`/agent/${this.agentId}/window`);
 			const { data: window } = response;
 			const { id, lastVisited, name, pointer, program } = window;
@@ -96,7 +95,7 @@ describe('API-agent', function () {
 			assert.equal(program, null);
 		});
 
-		it.only('should create another window behind last one in agent.window.list', async () => {
+		it('should create another window behind last one in agent.window.list', async () => {
 			const response = await agentAxios.post(`/agent/${this.agentId}/window`);
 			const { data: window } = response;
 			const { id } = window;
@@ -109,14 +108,126 @@ describe('API-agent', function () {
 	});
 
 	describe('GET /agent/:agentId/window/:windowId', function () {
-		it('should be 200 & respond a window entry');
-		it('should be found the window entry in 10 secs');
-		it('should be auto-removed after another 10 secs');
+		this.beforeAll(async () => {
+			const agentResponse = await agentAxios.get('/agent/fetch');
+			const { headers } = agentResponse;
+			
+			assert.equal(headers['content-type'], 'text/html; charset=utf-8');
+			assert(cookieStringReg.test(headers['set-cookie'][0]));
+
+			this.agentId = headers['set-cookie'][0].match(cookieStringReg)[1];
+			
+			const windowResponse = await agentAxios.post(`/agent/${this.agentId}/window`);
+			const { data: window } = windowResponse;
+
+			this.windowId = window.id;
+		});
+
+		it('should be 200 & respond a window entry', async () => {
+			const response = await agentAxios.get(`/agent/${this.agentId}/window/${this.windowId}`);
+			const { data: window } = response;
+
+			assert.equal(window.id, this.windowId);
+		});
+
+		it('should be found the window entry in 10 secs', (done) => {
+			setTimeout(async () => {
+				const response = await agentAxios.get(`/agent/${this.agentId}/window/${this.windowId}`);
+				const { data: window } = response;
+	
+				assert.equal(window.id, this.windowId);
+				done();
+			}, 8000);
+		});
+
+		it('should be found the window entry in another 10 secs', (done) => {
+			setTimeout(async () => {
+				const response = await agentAxios.get(`/agent/${this.agentId}/window/${this.windowId}`);
+				const { data: window } = response;
+	
+				assert.equal(window.id, this.windowId);
+				done();
+			}, 8000);
+		});
+
+		it('should be auto-removed after more than 10 secs', (done) => {
+			setTimeout(async () => {
+				try {
+					await agentAxios.get(`/agent/${this.agentId}/window/${this.windowId}`);
+				} catch ({ response }) {
+					assert.equal(response.status, 404);
+				}
+	
+				done();
+			}, 13000);
+		});
 	});
 
 	describe('DELETE /agent/:agentId/window/:windowId', function () {
-		it('should respond the removed window & not found when get again');
-		it('should [B, C] in agent.window.list "+A +B -A +C +D -D"');
+		this.beforeAll(async () => {
+			const agentResponse = await agentAxios.get('/agent/fetch');
+			const { headers } = agentResponse;
+			
+			assert.equal(headers['content-type'], 'text/html; charset=utf-8');
+			assert(cookieStringReg.test(headers['set-cookie'][0]));
+
+			this.agentId = headers['set-cookie'][0].match(cookieStringReg)[1];
+			
+			const windowResponse = await agentAxios.post(`/agent/${this.agentId}/window`);
+			const { data: window } = windowResponse;
+
+			this.windowId = window.id;
+		});
+
+		it('should respond the removed window & not found when get again', async () => {
+			const response = await agentAxios.delete(`/agent/${this.agentId}/window/${this.windowId}`);
+			const { data: window } = response;
+			
+			assert.equal(window.id, this.windowId);
+
+			try {
+				await agentAxios.get(`/agent/${this.agentId}/window/${this.windowId}`);
+			} catch ({ response }) {
+				assert.equal(response.status, 404);
+			}
+		});
+
+		async function postWindow(agentId) {
+			const { data } = await agentAxios.post(`/agent/${agentId}/window`);
+
+			return data.id;
+		}
+
+		async function deleteWindow(agentId, windowId) {
+			const { data } = await agentAxios.delete(`/agent/${agentId}/window/${windowId}`);
+
+			return data.id;
+		}
+
+		it('should [B, C] in agent.window.list "+A +B -A +C +D -D"', async () => {
+			const agentResponse = await agentAxios.get('/agent/fetch');
+			const { headers } = agentResponse;
+			
+			assert.equal(headers['content-type'], 'text/html; charset=utf-8');
+			assert(cookieStringReg.test(headers['set-cookie'][0]));
+
+			const agentId = headers['set-cookie'][0].match(cookieStringReg)[1];
+
+			const A = await postWindow(agentId);
+			const B = await postWindow(agentId);
+			await deleteWindow(agentId, A);
+			const C = await postWindow(agentId);
+			const D = await postWindow(agentId);
+			await deleteWindow(agentId, D);
+
+			const agent = cache.agent.get(agentId);
+
+			assert.equal(agent.window.list[0].id, B);
+			assert.equal(agent.window.list[1].id, C);
+
+			assert(agent.window.idIndex.hasOwnProperty(B));
+			assert(agent.window.idIndex.hasOwnProperty(C));
+		});
 	});
 
 });

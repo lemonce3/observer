@@ -17,14 +17,13 @@ class Window extends EventEmitter {
 		this.pointer = { x: 0, y: 0 };
 		this.lastVisited = Date.now();
 
-		const destroyWrap = now => {
+		this.destroyWrap = now => {
 			if (this.lastVisited + IDLE_GC_TIMEOUT < now) {
 				this.destroy();
-				process.off('app-gc', destroyWrap);
 			}
 		};
 
-		process.on('app-gc', destroyWrap);
+		process.on('app-gc', this.destroyWrap);
 	}
 	
 	setProgram(program) {
@@ -60,8 +59,9 @@ class Window extends EventEmitter {
 
 	destroy() {
 		this.emit('destroy');
+		process.off('app-gc', this.destroyWrap);
 	}
-}
+};
 
 module.exports = {
 	Window,

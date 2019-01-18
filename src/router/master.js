@@ -52,6 +52,22 @@ agentRouter.param('agentName', (id, ctx, next) => {
 
 	cache.program.set(program.id, program, timeout);
 	ctx.master.execute(ctx.params.agentName, ctx.body = program);
+}).patch('/:agentName/window/name', ctx => {
+	const { index } = ctx.query;
+	const { name } = ctx.request.body;
+
+	if (_.isNumber(index)) {
+		return ctx.status = 400;
+	}
+
+	const window = ctx.agent.queryWindow({ index });
+
+	if (!window) {
+		return ctx.status = 404;
+	}
+
+	ctx.agent.setWindowName(window.id, name);
+	ctx.body = window;
 });
 
 router.param('masterId', (id, ctx, next) => {
