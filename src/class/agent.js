@@ -1,47 +1,35 @@
 const sha1 = require('hash.js').sha1;
 const _ = require('lodash');
+const EventEmitter = require('events');
 
 class AgentRuntimeError extends Error {}
 
-class Agent {
+class Agent extends EventEmitter {
 	constructor() {
-		this.master = null;
-		this.id = sha1().update(new Date().toISOString()).digest('hex');
+		super();
 
-		this.window = {
+		this.id = sha1().update(new Date().toISOString()).digest('hex');
+		this.master = null;
+
+		this.windowRegistry = {
 			list: [],
 			idIndex: {},
-			nameIndex: {}
 		};
 
-		this.master = null;
+		this.onMasterDestroy = () => this.unbind();
 	}
 
-	queryWindow({ index, name }) {
-		if (index) {
-			return this.window.list[index];
-		}
-
-		if (name) {
-			return this.window.mapping[name];
-		}
-
-		throw new AgentRuntimeError('Invali query.');
+	queryWindow(index = 0) {
+		return this.windowRegistry.list[index];
 	}
 
 	getWindow(id) {
-		return this.window.idIndex[id];
-	}
-
-	setWindowName(windowId, name) {
-		const window = this.window.nameIndex[name] = this.getWindow(windowId);
-
-		window.setName(name);
+		return this.windowRegistry.idIndex[id];
 	}
 
 	appendWindow(window) {
-		this.window.list.push(window);
-		this.window.idIndex[window.id] = window;
+		this.windowRegistry.list.push(window);
+		this.windowRegistry.idIndex[window.id] = window;
 
 		window.once('destroy', () => this.removeWindow(window.id));
 	}
@@ -53,28 +41,28 @@ class Agent {
 			throw new AgentRuntimeError(`Window id:${id} has been removed.`);
 		}
 
-		delete this.window.idIndex[id];
-		_.remove(this.window.list, window => {
-			return 	window === removed;
-		});
+		removed.removeAllListeners('detroy');
+		delete this.windowRegistry.idIndex[id];
+		_.remove(this.windowRegistry.list, window => window === removed);
 
 		if (removed.name) {
-			delete this.window.nameIndex[removed.name];
+			delete this.windowRegistry.nameIndex[removed.name];
 		}
 	}
 
 	bind(master) {
 		this.master = master;
+		master.once('destroy', this.onMasterDestroy);
 	}
 
 	unbind() {
+		this.master.off('destroy', this.onMasterDestroy);
+		this.removeAllListeners('destroy');
 		this.master = null;
 	}
 
-	execute(program, windowQuery = { index: 0 }) {
-		this.getWindow(windowQuery).setProgram(program);
-
-		return program;
+	destroy() {
+		this.emit('destroy', this);
 	}
 }
 

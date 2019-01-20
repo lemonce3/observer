@@ -1,10 +1,8 @@
 const Router = require('koa-router');
 const fs = require('fs');
 const path = require('path');
-
-const { Agent } = require('../class/agent');
-const { Window } = require('../class/window');
 const cache = require('../cache');
+const _ = require('lodash');
 
 const router = module.exports = new Router({ prefix: '/agent' });
 const windowRouter = new Router({ prefix: '/window' });
@@ -12,45 +10,87 @@ const fetchHTML = fs.readFileSync(path.resolve('src/fetch.html'));
 const COOKIE_KEY = 'LC_AGENT';
 
 windowRouter.param('windowId', (id, ctx, next) => {
-	const window = ctx.window = ctx.agent.getWindow(id);
+	const window = ctx.window = cache.getWindow(id);
 	
-	if (!window) {
-		return ctx.status = 404;
-	}
-
-	window.visit();
-
-	return next();
+	return window ? next() : ctx.status = 404;
 }).post('/', ctx => {
-	ctx.agent.appendWindow(ctx.body = new Window());
+	ctx.body = cache.createWindow(ctx.agent.id);
 }).get('/:windowId', ctx => {
 	ctx.body = ctx.window;
 }).del('/:windowId', ctx => {
-	ctx.window.destroy();
+	cache.window.del(ctx.window.id);
 	ctx.body = ctx.window;
-});
+}).post('/:window/program/:programId/exit', ctx => {
+	const { error, returnValue } = ctx.request.body;
 
-router.param('agentId', (id, ctx, next) => {
-	const agent = cache.agent.get(id);
+	if (!error && !returnValue) {
+		return ctx.status = 400;
+	}
 
-	if (!agent) {
+	if (error && !validateProgramError(error)) {
+		return ctx.status = 400;
+	}
+
+	if (returnValue && !validateProgramReturnValue(returnValue)) {
+		return ctx.status = 400;
+	}
+
+	const { programId } = ctx.params;
+	const program = cache.program.get(programId);
+
+	if (!program) {
 		return ctx.status = 404;
 	}
 
-	ctx.agent = agent;
+	cache.exitProgram(ctx.params.programId, {
+		error, returnValue
+	});
 
-	return next();
+	ctx.body = cache.getProgram(programId);
+});
+
+router.param('agentId', (id, ctx, next) => {
+	const agent = ctx.agent = cache.getAgent(id);
+
+	return agent ? next() : ctx.status = 404;
 }).get('/fetch', ctx => {
 	const agentId = ctx.cookies.get(COOKIE_KEY);
 	//TODO 可以通过query创建带有meta数据的agent用于标识资源角色
 
 	if (!agentId || !cache.agent.get(agentId)) {
-		const newAgent = new Agent();
+		const newAgent = cache.createAgent();
 
-		cache.agent.set(newAgent.id, newAgent);
 		ctx.cookies.set(COOKIE_KEY, newAgent.id, { httpOnly: false, maxAge: 0 });
 	}
 
 	ctx.response.type = 'text/html; charset=utf-8';
 	ctx.body = fetchHTML;
 }).use('/:agentId', windowRouter.routes());
+
+function validateProgramReturnValue({ isObject, value }) {
+	if (!_.isBoolean(isObject)) {
+		return false;
+	}
+
+	if (_.isObject(value)) {
+		return false;
+	}
+
+	return true;
+}
+
+function validateProgramError({ type, message, stack }) {
+	if (!_.isString(type) && !_.isUndefined(type)) {
+		return false;
+	}
+
+	if (!_.isString(message)) {
+		return false;
+	}
+
+	// if (!_.isString(stack)) {
+	// 	return false;
+	// }
+
+	return true;
+}

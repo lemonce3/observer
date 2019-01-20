@@ -4,7 +4,7 @@ const sha1 = require('hash.js').sha1;
 let count = 0;
 
 class Program extends EventEmitter {
-	constructor(name, args = [], timout = 3000) {
+	constructor(name, args = []) {
 		super();
 
 		this.id = sha1().update(`${Date.now()}-${count++}`).digest('hex');
@@ -14,20 +14,28 @@ class Program extends EventEmitter {
 
 		this.returnValue = null;
 		this.error = null;
-
-		setTimeout(() => this.setError(), timout);
 	}
 
 	get isPending() {
 		return this.returnValue === null && this.error === null;
 	}
 
-	setReturn(returnValue) {
-		this.emit('return', this.returnValue = returnValue, this);
+	get isExited() {
+		return this.returnValue !== null || this.error !== null;
+	}
+
+	setReturnValue(returnValue) {
+		this.returnValue = returnValue;
+		this.$exit();
 	}
 
 	setError(error) {
-		this.emit('error', this.error = error, this);
+		this.error = error;
+		this.$exit();
+	}
+
+	$exit() {
+		this.emit('exit', this);
 	}
 }
 

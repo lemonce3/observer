@@ -1,47 +1,42 @@
 const sha1 = require('hash.js').sha1;
+const EventEmitter = require('events');
 
 let count = 0;
 
 class MasterRuntimeError extends Error {}
 
-class Master {
+class Master extends EventEmitter{
 	constructor() {
+		super();
+
 		this.id = sha1().update(`${Date.now()}-${count++}`).digest('hex');
-		this.agent = {};
+		this.agents = {};
 		this.log = [];
 	}
 
 	bind(name, agent) {
 		agent.bind(this);
-		this.agent[name] = agent;
+		this.agents[name] = agent;
+		agent.once('destroy', () => this.unbind(name));
 	}
 
 	unbind(name) {
-		if (this.agent === null) {
-			throw new MasterRuntimeError('Master has no agent binded.');
-		}
+		this.agents[name].unbind();
+		delete this.agents[name];
+	}
 
-		this.agent[name].unbind();
-		delete this.agent[name];
+	destroy() {
+		this.unbindAll();
+		this.emit('destroy');
 	}
 
 	unbindAll() {
-		Object.keys(this.agent).forEach(agent => agent.unbind());
-		this.agent = {};
+		Object.keys(this.agents).forEach(agent => agent.unbind());
+		this.agents = {};
 	}
 
-	execute(agentName, program, windowQuery = { index: 0 }) {
-		const agent = this.agent[agentName];
-
-		program.once('error', (error, program) => {
-			console.log('//TODO log');
-		});
-
-		program.once('return', (programReturnValue, program) => {
-
-		});
-
-		agent.execute(program, windowQuery);
+	getAgentByName(name) {
+		return this.agents[name];
 	}
 
 	pushLog(message, namespace = '*') {
@@ -53,7 +48,6 @@ class Master {
 
 	clearLog() {
 		const oldLogList = this.log;
-
 		this.log = [];
 		
 		return oldLogList;

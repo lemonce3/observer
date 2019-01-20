@@ -1,10 +1,11 @@
-require('../');
 const axios = require('axios');
 const assert = require('assert');
-const _ = require('lodash');
+
 const cache = global.cache = require('../src/cache');
 
 describe('API-agent', function () {
+	require('../');
+
 	const cookieStringReg = /LC_AGENT=([a-z0-9]{40})/;
 	const agentAxios = axios.create({
 		baseURL: `${config.serverName}/api`,
@@ -75,22 +76,20 @@ describe('API-agent', function () {
 			assert(cookieStringReg.test(headers['set-cookie'][0]));
 
 			this.agentId = headers['set-cookie'][0].match(cookieStringReg)[1];
-		});
 
-		setInterval(() => {
-			agentAxios.get('/agent/fetch', {
-				headers: { cookie: `LC_AGENT=${this.agentId}` }
-			});
-		}, 2000);
+			setInterval(() => {
+				agentAxios.get('/agent/fetch', {
+					headers: { cookie: `LC_AGENT=${this.agentId}` }
+				});
+			}, 2000);
+		});
 
 		it('should create a new window', async () => {
 			const response = await agentAxios.post(`/agent/${this.agentId}/window`);
 			const { data: window } = response;
-			const { id, lastVisited, name, pointer, program } = window;
+			const { id, pointer, program } = window;
 			
 			assert(windowIdReg.test(id));
-			assert(_.isNumber(lastVisited));
-			assert(_.isNull(name));
 			assert.deepEqual(pointer, { x: 0, y: 0 });
 			assert.equal(program, null);
 		});
@@ -100,10 +99,10 @@ describe('API-agent', function () {
 			const { data: window } = response;
 			const { id } = window;
 
-			const agent = cache.agent.get(this.agentId);
+			const agent = cache.agent.peek(this.agentId);
 
-			assert.equal(agent.window.list.length, 2);
-			assert.equal(agent.window.list[1].id, id);
+			assert.equal(agent.windowRegistry.list.length, 2);
+			assert.equal(agent.windowRegistry.list[1].id, id);
 		});
 	});
 
@@ -222,12 +221,90 @@ describe('API-agent', function () {
 
 			const agent = cache.agent.get(agentId);
 
-			assert.equal(agent.window.list[0].id, B);
-			assert.equal(agent.window.list[1].id, C);
+			assert.equal(agent.windowRegistry.list[0].id, B);
+			assert.equal(agent.windowRegistry.list[1].id, C);
 
-			assert(agent.window.idIndex.hasOwnProperty(B));
-			assert(agent.window.idIndex.hasOwnProperty(C));
+			assert(agent.windowRegistry.idIndex.hasOwnProperty(B));
+			assert(agent.windowRegistry.idIndex.hasOwnProperty(C));
 		});
 	});
 
+	describe('POST /agent/:agentId/window/:windowId/program/:programId/exit', function () {
+		this.beforeAll(async () => {
+			const agentResponse = await agentAxios.get('/agent/fetch');
+			const { headers } = agentResponse;
+			
+			assert.equal(headers['content-type'], 'text/html; charset=utf-8');
+			assert(cookieStringReg.test(headers['set-cookie'][0]));
+
+			this.agentId = headers['set-cookie'][0].match(cookieStringReg)[1];
+			
+			const windowResponse = await agentAxios.post(`/agent/${this.agentId}/window`);
+			const { data: window } = windowResponse;
+
+			this.windowId = window.id;
+		});
+
+		it('should post a returnValue', async () => {
+			const program = cache.createProgram(this.agentId, this.windowId, {
+				name: 'test',
+				args: [],
+				timeout: 10000
+			});
+
+			const url = `/agent/${this.agentId}/window/${this.windowId}/program/${program.id}/exit`;
+			const response = await agentAxios.post(url, {
+				returnValue: {
+					isObject: false,
+					value: null
+				}
+			});
+
+			const { data } = response;
+
+			assert.deepEqual(data, {
+				id: program.id,
+				name: 'test',
+				args: [],
+				returnValue: {
+					isObject: false,
+					value: null
+				},
+				error: null
+			});
+		});
+
+		it('should post a error', async () => {
+			const program = cache.createProgram(this.agentId, this.windowId, {
+				name: 'test',
+				args: [],
+				timeout: 10000
+			});
+
+			const url = `/agent/${this.agentId}/window/${this.windowId}/program/${program.id}/exit`;
+			const response = await agentAxios.post(url, {
+				error: {
+					type: 'RuntimeError',
+					message: 'test',
+					stack: []
+				}
+			});
+
+			const { data } = response;
+
+			assert.deepEqual(data, {
+				id: program.id,
+				name: 'test',
+				args: [],
+				returnValue: null,
+				error: {
+					type: 'RuntimeError',
+					message: 'test',
+					stack: []
+				}
+			});
+
+		});
+
+	});
 });

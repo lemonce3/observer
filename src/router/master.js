@@ -7,6 +7,33 @@ const cache = require('../cache');
 
 const router = module.exports = new Router({ prefix: '/master' });
 const agentRouter = new Router({ prefix: '/agent' });
+const windowRouter = new Router({ prefix: '/window' });
+const logRouter = new Router({ prefix: '/log' });
+
+windowRouter.param('windowId', (id, ctx, next) => {
+	const window = ctx.window = ctx.agent.window.idIndex[id];
+
+	return window ? next() : ctx.status = 404;
+}).get('/', ctx => {
+
+}).get('/:windowId', ctx => {
+
+}).post('/:windowId/program', ctx => {
+	const { name, args, timeout } = ctx.request.body;
+
+	if (!_.isString('name')) {
+		return ctx.status = 400;
+	}
+
+	if (!Array.isArray(args)) {
+		return ctx.status = 400;
+	}
+
+	const program = new Program(name, args);
+
+	cache.program.set(program.id, program, timeout);
+	ctx.master.execute(ctx.params.agentName, ctx.body = program);
+});
 
 agentRouter.param('agentName', (id, ctx, next) => {
 	const agent = ctx.master.agent[id];
@@ -37,56 +64,17 @@ agentRouter.param('agentName', (id, ctx, next) => {
 }).del('/:agentName', ctx => {
 	ctx.master.unbind(ctx.params.agentName);
 	ctx.body = ctx.agent;
-}).post('/:agentName/program', async ctx => {
-	const { name, args, timeout } = ctx.request.body;
-
-	if (!_.isString('name')) {
-		return ctx.status = 400;
-	}
-
-	if (!Array.isArray(args)) {
-		return ctx.status = 400;
-	}
-
-	const program = new Program(name, args);
-
-	cache.program.set(program.id, program, timeout);
-	ctx.master.execute(ctx.params.agentName, ctx.body = program);
-}).patch('/:agentName/window/name', ctx => {
-	const { index } = ctx.query;
-	const { name } = ctx.request.body;
-
-	if (_.isNumber(index)) {
-		return ctx.status = 400;
-	}
-
-	const window = ctx.agent.queryWindow({ index });
-
-	if (!window) {
-		return ctx.status = 404;
-	}
-
-	ctx.agent.setWindowName(window.id, name);
-	ctx.body = window;
-});
+}).use('/:agentName', windowRouter.routes());
 
 router.param('masterId', (id, ctx, next) => {
-	if (!cache.master.has(id)) {
-		return ctx.status = 404;
-	}
+	const master = ctx.master = cache.getMaster(id);
 
-	ctx.master = cache.master.get(id);
-
-	return next();
+	return master ? next() : ctx.status = 404;
+}).post('/', ctx => {
+	ctx.body = cache.createMaster();
 }).get('/:masterId', ctx => {
 	ctx.body = ctx.master;
-}).post('/', ctx => {
-	const master = new Master();
-
-	cache.master.set(master.id, master);
-	ctx.body = master;
 }).delete('/:masterId', ctx => {
-	ctx.master.unbindAll();
 	cache.master.del(ctx.params.masterId);
 	ctx.body = ctx.master;
 }).get('/:masterId/log', ctx => {
