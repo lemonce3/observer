@@ -99,41 +99,73 @@ module.exports = {
 	getMaster(id) {
 		const master = this.master.get(id);
 
-		return master && {
-			id: master.id,
-			agents: Object.keys(master.agents)
-		};
+		return master && ModelMaster(master);
 	},
 	getAgent(id) {
 		const agent = this.agent.get(id);
 
-		return agent && {
-			id: agent.id,
-			master: agent.master && agent.master.id,
-		};
+		return agent && ModelAgent(agent);
 	},
 	getWindow(id) {
 		const window = this.window.get(id);
 
-		return window && {
-			id: window.id,
-			program: window.program && {
-				name: window.program.name,
-				args: window.program.args
-			},
-			pointer: window.pointer,
-			meta: window.meta
-		};
+		return window && ModelWindow(window);
 	},
 	getProgram(id) {
 		const program = this.program.get(id);
 
-		return program && {
-			id: program.id,
-			name: program.name,
-			args: program.args,
-			returnValue: program.returnValue,
-			error: program.error
-		};
+		return program && ModelProgram(program);
+	},
+	getAllWindow() {
+		this.window.prune();
+		return this.window.values().map(window => ModelWindow(window));
+	},
+	getAllMaster() {
+		this.master.prune();
+		return this.master.values().map(master => ModelMaster(master));
+	},
+	getAllAgent() {
+		this.agent.prune();
+		return this.agent.values().map(agent => ModelAgent(agent));
+	},
+	getAllProgram() {
+		this.program.prune();
+		return this.program.values().map(program => ModelProgram(program));
 	}
 };
+
+function ModelProgram(program) {
+	return {
+		id: program.id,
+		name: program.name,
+		args: program.args,
+		returnValue: program.returnValue,
+		error: program.error
+	};
+}
+
+function ModelMaster(master) {
+	return {
+		id: master.id,
+		agents: Object.keys(master.agents)
+	};
+}
+
+function ModelAgent(agent) {
+	return {
+		id: agent.id,
+		master: agent.master && agent.master.id,
+	};
+}
+
+function ModelWindow(window) {
+	return {
+		id: window.id,
+		program: window.program && {
+			name: window.program.name,
+			args: window.program.args
+		},
+		pointer: window.pointer,
+		meta: window.meta
+	}
+}
