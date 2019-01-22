@@ -1,5 +1,4 @@
 const assert = require('assert');
-const _ = require('lodash');
 const cache = require('../src/cache');
 
 describe('Class with cache', function () {
@@ -62,10 +61,10 @@ describe('Class with cache', function () {
 		const masterInstance = cache.master.get(master.id);
 		const agentInstance = cache.agent.get(agent.id);
 		
-		masterInstance.bind('test', agentInstance);
+		masterInstance.bind(agentInstance);
 
 		assert.equal(agentInstance.master.id, master.id);
-		assert.equal(masterInstance.getAgentByName('test').id, agent.id);
+		assert.equal(masterInstance.getAgent(agent.id).id, agent.id);
 		assert.equal(cache.getIdleAgent(), undefined);
 	});
 
@@ -75,14 +74,14 @@ describe('Class with cache', function () {
 
 		const agentInstance = cache.agent.peek(agent.id);
 		const masterInstance = cache.master.peek(master.id);
-		masterInstance.bind('test', agentInstance);
+		masterInstance.bind(agentInstance);
 
 		assert.equal(agentInstance.master, masterInstance);
-		assert.equal(masterInstance.getAgentByName('test'), agentInstance);
+		assert.equal(masterInstance.getAgent(agent.id), agentInstance);
 
 		setTimeout(() => {
 			assert.equal(agentInstance.master, masterInstance);
-			assert.equal(masterInstance.getAgentByName('test'), agentInstance);
+			assert.equal(masterInstance.getAgent(agent.id), agentInstance);
 		}, 3000);
 
 		setTimeout(() => {
@@ -93,7 +92,7 @@ describe('Class with cache', function () {
 			assert.equal(master, undefined);
 
 			assert.strictEqual(agentInstance.master, null);
-			assert.strictEqual(masterInstance.getAgentByName('test'), undefined);
+			assert.strictEqual(masterInstance.getAgent(agentInstance.id), undefined);
 
 			done();
 		}, 14000);

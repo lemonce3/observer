@@ -131,7 +131,11 @@ module.exports = {
 	getAllProgram() {
 		this.program.prune();
 		return this.program.values().map(program => ModelProgram(program));
-	}
+	},
+	ModelAgent,
+	ModelMaster,
+	ModelProgram,
+	ModelWindow,
 };
 
 function ModelProgram(program) {
@@ -167,5 +171,9 @@ function ModelWindow(window) {
 		},
 		pointer: window.pointer,
 		meta: window.meta
-	}
+	};
+}
+
+function ModelMasterLog() {
+
 }

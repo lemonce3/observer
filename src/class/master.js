@@ -14,15 +14,15 @@ class Master extends EventEmitter{
 		this.log = [];
 	}
 
-	bind(name, agent) {
+	bind(agent) {
 		agent.bind(this);
-		this.agents[name] = agent;
-		agent.once('destroy', () => this.unbind(name));
+		this.agents[agent.id] = agent;
+		agent.once('destroy', () => this.unbind(agent.id));
 	}
 
-	unbind(name) {
-		this.agents[name].unbind();
-		delete this.agents[name];
+	unbind(agentId) {
+		this.agents[agentId].unbind();
+		delete this.agents[agentId];
 	}
 
 	destroy() {
@@ -35,11 +35,11 @@ class Master extends EventEmitter{
 		this.agents = {};
 	}
 
-	getAgentByName(name) {
-		return this.agents[name];
+	getAgent(id) {
+		return this.agents[id];
 	}
 
-	pushLog(message, namespace = '*') {
+	pushLog(message, namespace) {
 		const newLog = [Date.now(), namespace, message];
 		this.log.push(newLog);
 
