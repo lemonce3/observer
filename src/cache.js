@@ -166,6 +166,7 @@ function ModelWindow(window) {
 	return {
 		id: window.id,
 		program: window.program && {
+			id: window.program.id,
 			name: window.program.name,
 			args: window.program.args
 		},

@@ -221,6 +221,7 @@ describe('Class with cache', function () {
 		assert.deepEqual(cache.getWindow(window.id), {
 			id: window.id,
 			program: {
+				id: program.id,
 				name: 'test',
 				args: [1]
 			},
@@ -266,6 +267,7 @@ describe('Class with cache', function () {
 		assert.deepEqual(cache.getWindow(window.id), {
 			id: window.id,
 			program: {
+				id: program.id,
 				name: 'test',
 				args: [2]
 			},
