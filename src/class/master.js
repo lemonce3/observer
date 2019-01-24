@@ -31,7 +31,9 @@ class Master extends EventEmitter{
 	}
 
 	unbindAll() {
-		Object.keys(this.agents).forEach(agent => agent.unbind());
+		Object.keys(this.agents).forEach(name => {
+			this.agents[name].unbind();
+		});
 		this.agents = {};
 	}
 

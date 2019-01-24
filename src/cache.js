@@ -37,6 +37,7 @@ module.exports = {
 	}),
 	getIdleAgent() {
 		this.agent.prune();
+		this.master.prune();
 		
 		return this.agent.values().find(agent => agent.master === null);
 	},
@@ -121,11 +122,13 @@ module.exports = {
 		return this.window.values().map(window => ModelWindow(window));
 	},
 	getAllMaster() {
+		this.agent.prune();
 		this.master.prune();
 		return this.master.values().map(master => ModelMaster(master));
 	},
 	getAllAgent() {
 		this.agent.prune();
+		this.master.prune();
 		return this.agent.values().map(agent => ModelAgent(agent));
 	},
 	getAllProgram() {
@@ -149,9 +152,15 @@ function ModelProgram(program) {
 }
 
 function ModelMaster(master) {
+	const agents = {};
+
+	for(const id in master.agents) {
+		agents[id] = ModelAgent(master.agents[id]);
+	}
+
 	return {
 		id: master.id,
-		agents: Object.keys(master.agents)
+		agents
 	};
 }
 
@@ -159,6 +168,7 @@ function ModelAgent(agent) {
 	return {
 		id: agent.id,
 		master: agent.master && agent.master.id,
+		windows: agent.windowRegistry.list.map(window => ModelWindow(window))
 	};
 }
 
