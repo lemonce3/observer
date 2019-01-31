@@ -13,6 +13,31 @@ windowRouter.param('windowId', (id, ctx, next) => {
 		ctx.agentInstance.windowRegistry.idIndex[id];
 
 	return window ? next() : ctx.status = 404;
+}).post('/:windowId/dialog/:dialogType/resolve', async ctx => {
+	const { dialogType: type } = ctx.params;
+	const { method, value } = ctx.request.body;
+	const dialog = ctx.window.dialog[type];
+	
+	if (!dialog) {
+		return ctx.status = 404;
+	}
+
+	if (!dialog[method]) {
+		return ctx.status = 400;
+	}
+
+	dialog[method](value);
+	
+	ctx.body = { type, message: dialog.message };
+}).get('/:windowId/dialog/:dialogType', async ctx => {
+	const { dialogType: type } = ctx.params;
+	const dialog = ctx.window.dialog[type];
+	
+	if (!dialog) {
+		return ctx.status = 404;
+	}
+
+	ctx.body = { type, message: dialog.message };
 }).post('/:windowId/program', ctx => {
 	const { agentId, windowId } = ctx.params;
 	const { name, args, timeout } = ctx.request.body;

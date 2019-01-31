@@ -83,22 +83,22 @@ module.exports = {
 	},
 	exitProgram(id, {
 		error = null,
-		returnValue = { isObject: false, value: undefined }
+		returnValue
 	}) {
 		const program = this.program.peek(id);
 
 		if (error) {
 			const { type, message, stack = [] } = error;
 			program.setError(new ProgramError(type, message, stack));
-		} else if (returnValue) {
-			const { isObject, value } = returnValue;
-			program.setReturnValue(new ProgramReturnValue(value, isObject));
 		} else {
-			throw new Error('');
+			program.setReturnValue(new ProgramReturnValue(returnValue));
 		}
 	},
 	getMaster(id) {
 		const master = this.master.get(id);
+		
+		this.agent.prune();
+		this.window.prune();
 
 		return master && ModelMaster(master);
 	},
@@ -129,6 +129,7 @@ module.exports = {
 	getAllAgent() {
 		this.agent.prune();
 		this.master.prune();
+		this.window.prune();
 		return this.agent.values().map(agent => ModelAgent(agent));
 	},
 	getAllProgram() {
@@ -146,7 +147,7 @@ function ModelProgram(program) {
 		id: program.id,
 		name: program.name,
 		args: program.args,
-		returnValue: program.returnValue,
+		returnValue: program.returnValue && program.returnValue.value,
 		error: program.error
 	};
 }

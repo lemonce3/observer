@@ -254,10 +254,7 @@ describe('API-agent', function () {
 
 			const url = `/agent/${this.agentId}/window/${this.windowId}/program/${program.id}/exit`;
 			const response = await agentAxios.post(url, {
-				returnValue: {
-					isObject: false,
-					value: null
-				}
+				returnValue: null
 			});
 
 			const { data } = response;
@@ -266,10 +263,7 @@ describe('API-agent', function () {
 				id: program.id,
 				name: 'test',
 				args: [],
-				returnValue: {
-					isObject: false,
-					value: null
-				},
+				returnValue: null,
 				error: null
 			});
 		});
@@ -306,5 +300,64 @@ describe('API-agent', function () {
 
 		});
 
+	});
+
+	describe('POST /agent/:agentId/window/:windowId/dialog', function () {
+		this.beforeAll(async () => {
+			const agentResponse = await agentAxios.get('/agent/fetch');
+			const { headers } = agentResponse;
+			
+			assert.equal(headers['content-type'], 'text/html; charset=utf-8');
+			assert(cookieStringReg.test(headers['set-cookie'][0]));
+
+			this.agentId = headers['set-cookie'][0].match(cookieStringReg)[1];
+			
+			const windowResponse = await agentAxios.post(`/agent/${this.agentId}/window`);
+			const { data: window } = windowResponse;
+
+			this.windowId = window.id;
+		});
+
+		it('should fail to create a dialog with bad type and status 400', async () => {
+			try {
+				await agentAxios.post(`/agent/${this.agentId}/window/${this.windowId}/dialog`, {
+					type: 'illegal',
+				});
+
+				assert(false);
+			} catch ({ response }) {
+				assert.equal(response.status, 400);
+			}
+
+		});
+
+		it('should create a alert successfully & timeout with status 408', async () => {
+			try {
+				await agentAxios.post(`/agent/${this.agentId}/window/${this.windowId}/dialog`, {
+					type: 'alert',
+				});
+
+				assert(false);
+			} catch ({ response }) {
+				assert.equal(response.status, 408);
+			}
+		});
+
+		it('should create a prompt', async () => {
+			const window = cache.window.peek(this.windowId);
+
+			setTimeout(() => {
+				window.getDialog('prompt').input('test');
+			}, 5000);
+
+			const {
+				data: dialogReturn
+			} = await agentAxios.post(`/agent/${this.agentId}/window/${this.windowId}/dialog`, {
+				type: 'prompt',
+			});
+
+			assert.equal(dialogReturn.value, 'test');
+			assert.equal(window.dialog.prompt, null);
+		});
 	});
 });

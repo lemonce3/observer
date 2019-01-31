@@ -293,6 +293,87 @@ describe('API-master', function () {
 		});
 	});
 
+	describe('GET /master/:masterId/agent/:agentId/window/:windowId/dialog/:dialogType', function () {
+		this.beforeAll(async () => {
+			const { data: master } = await masterAxios.post('/master');
+			this.masterId= master.id;
+
+			await masterAxios.get('/agent/fetch');
+
+			const { data: agent } = await masterAxios.post(`/master/${master.id}/agent`);
+			this.agentId = agent.id;
+			
+			const { data: window } = await masterAxios.post(`/agent/${agent.id}/window`);
+			this.windowId = window.id;
+		});
+		
+		it('should 404 when no specific type dialog', async () => {
+			const url = `/master/${this.masterId}/agent/${this.agentId}/window/${this.masterId}/dialog/alert`;
+			
+			try {
+				await masterAxios.get(url);
+
+				assert(0);
+			} catch ({ response }) {
+				assert.equal(response.status, 404);
+			}
+		});
+		
+		it('should get specific type dialog', async () => {
+			masterAxios.post(`/agent/${this.agentId}/window/${this.windowId}/dialog`, {
+				type: 'prompt',
+				message: 'test'
+			}).catch(() => {});
+
+			const url = `/master/${this.masterId}/agent/${this.agentId}/window/${this.windowId}/dialog/prompt`;
+			const { data: masterDialog } = await masterAxios.get(url);
+
+			assert.deepEqual(masterDialog, {
+				type: 'prompt',
+				message: 'test'
+			});
+		});
+	});
+
+	describe('POST /master/:masterId/agent/:agentId/window/:windowId/dialog/:dialogType/resolve', function () {
+		
+		this.beforeAll(async () => {
+			const { data: master } = await masterAxios.post('/master');
+			this.masterId= master.id;
+
+			await masterAxios.get('/agent/fetch');
+
+			const { data: agent } = await masterAxios.post(`/master/${master.id}/agent`);
+			this.agentId = agent.id;
+			
+			const { data: window } = await masterAxios.post(`/agent/${agent.id}/window`);
+			this.windowId = window.id;
+		});
+
+		it('should send ok when confirm dialog of window is being active', async () => {
+			const window = cache.window.peek(this.windowId);
+			const url = `/master/${this.masterId}/agent/${this.agentId}/window/${this.windowId}` +
+				'/dialog/confirm/resolve';
+
+			setTimeout(async () => {
+				await masterAxios.post(url, {
+					method: 'ok',
+				});
+
+				assert(1);
+			}, 2000);
+
+			const {
+				data: dialogReturn
+			} = await masterAxios.post(`/agent/${this.agentId}/window/${this.windowId}/dialog`, {
+				type: 'confirm',
+			});
+
+			assert.equal(dialogReturn.value, true);
+			assert.equal(window.dialog.confirm, null);
+		});
+	});
+
 	describe('GET /program/:programId', function () {
 
 		this.beforeAll(async () => {
@@ -332,4 +413,5 @@ describe('API-master', function () {
 
 	});
 	
+
 });

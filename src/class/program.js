@@ -40,8 +40,7 @@ class Program extends EventEmitter {
 }
 
 class ProgramReturnValue {
-	constructor(value, isObject) {
-		this.isObject = isObject;
+	constructor(value) {
 		this.value = value;
 	}
 }

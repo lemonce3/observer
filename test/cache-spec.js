@@ -231,20 +231,14 @@ describe('Class with cache', function () {
 
 		setTimeout(() => {
 			cache.exitProgram(program.id, {
-				returnValue: {
-					isObject: false,
-					value: 12345
-				}
+				returnValue: 123456
 			});
 
 			assert.deepEqual(cache.getProgram(program.id), {
 				id: program.id,
 				name: 'test',
 				args: [1],
-				returnValue: {
-					isObject: false,
-					value: 12345
-				},
+				returnValue: 123456,
 				error: null
 			});
 

@@ -10,6 +10,7 @@ class Agent extends EventEmitter {
 
 		this.id = sha1().update(new Date().toISOString()).digest('hex');
 		this.master = null;
+		this.modifier = {};
 
 		this.windowRegistry = {
 			list: [],
@@ -44,10 +45,6 @@ class Agent extends EventEmitter {
 		removed.removeAllListeners('detroy');
 		delete this.windowRegistry.idIndex[id];
 		_.remove(this.windowRegistry.list, window => window === removed);
-
-		if (removed.name) {
-			delete this.windowRegistry.nameIndex[removed.name];
-		}
 	}
 
 	bind(master) {

@@ -20,18 +20,30 @@ windowRouter.param('windowId', (id, ctx, next) => {
 }).del('/:windowId', ctx => {
 	cache.window.del(ctx.window.id);
 	ctx.body = ctx.window;
+}).post('/:windowId/dialog', async ctx => {
+	const { type, message = '' } = ctx.request.body;
+	const window = cache.window.get(ctx.window.id);
+
+	if (type !== 'alert' && type !== 'confirm' && type !== 'prompt') {
+		return ctx.status = 400;
+	}
+	
+	try {
+		ctx.body = {
+			value: await window.setDialog(type, message)
+		};
+	} catch (error) {
+		return ctx.status = 408;
+	}
+
 }).post('/:window/program/:programId/exit', ctx => {
 	const { error, returnValue } = ctx.request.body;
 
-	if (!error && !returnValue) {
+	if (error === undefined && returnValue === undefined) {
 		return ctx.status = 400;
 	}
 
 	if (error && !validateProgramError(error)) {
-		return ctx.status = 400;
-	}
-
-	if (returnValue && !validateProgramReturnValue(returnValue)) {
 		return ctx.status = 400;
 	}
 
@@ -67,19 +79,7 @@ router.param('agentId', (id, ctx, next) => {
 	ctx.body = fetchHTML;
 }).use('/:agentId', windowRouter.routes());
 
-function validateProgramReturnValue({ isObject, value }) {
-	if (!_.isBoolean(isObject)) {
-		return false;
-	}
-
-	if (_.isObject(value)) {
-		return false;
-	}
-
-	return true;
-}
-
-function validateProgramError({ type, message, stack }) {
+function validateProgramError({ type, message }) {
 	if (!_.isString(type) && !_.isUndefined(type)) {
 		return false;
 	}
@@ -87,10 +87,6 @@ function validateProgramError({ type, message, stack }) {
 	if (!_.isString(message)) {
 		return false;
 	}
-
-	// if (!_.isString(stack)) {
-	// 	return false;
-	// }
 
 	return true;
 }
