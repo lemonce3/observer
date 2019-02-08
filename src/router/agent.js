@@ -15,8 +15,10 @@ windowRouter.param('windowId', (id, ctx, next) => {
 	return window ? next() : ctx.status = 404;
 }).post('/', ctx => {
 	ctx.body = cache.createWindow(ctx.agent.id);
-}).get('/:windowId', ctx => {
+}).put('/:windowId', ctx => {
 	ctx.body = ctx.window;
+	ctx.body.agentId = ctx.agent.id;
+	ctx.body.masterId = ctx.agent.master;
 }).del('/:windowId', ctx => {
 	cache.window.del(ctx.window.id);
 	ctx.body = ctx.window;
