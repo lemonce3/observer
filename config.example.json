@@ -1,0 +1,10 @@
+{
+	"static": {
+		"path": "./www"
+	},
+	"http": {
+		"host": "0.0.0.0",
+		"port": 8080
+	},
+	"serverName": "http://localhost:8080"
+}

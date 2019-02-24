@@ -1,0 +1,33 @@
+{
+  "name": "@lemonce3/observer",
+  "version": "0.2.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lemonce3/observer.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lemonce3/observer/issues"
+  },
+  "homepage": "https://github.com/lemonce3/observer#readme",
+  "dependencies": {
+    "cookie": "^0.3.1",
+    "hash.js": "^1.1.7",
+    "koa": "^2.7.0",
+    "koa-bodyparser": "^4.2.1",
+    "koa-router": "^7.4.0",
+    "koa-static": "^5.0.0",
+    "lodash": "^4.17.11",
+    "randexp": "^0.5.3"
+  },
+  "devDependencies": {
+    "axios": "^0.18.0",
+    "mocha": "^6.0.0"
+  }
+}
