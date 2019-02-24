@@ -13,7 +13,6 @@ describe('database::', function () {
 		const masterData = db.master.add();
 
 		assert.equal(db.$store.master[masterData.id], masterData);
-
 	});
 
 	it('should create a agent correctly', function () {
@@ -147,6 +146,7 @@ describe('database::', function () {
 		db.program.del(programData.id);
 
 		assert.equal(windowData.programId, null);
+		assert.strictEqual(masterData.programs[programData.id], undefined);
 		assert.strictEqual(masterData.programs[programData.id], undefined);
 	});
 

@@ -21,7 +21,29 @@ module.exports = class Agent {
 
 	}
 
-	exit(windowId, programId, error, returnValue) {
+	openDialogByWindow(windowId, {
+		type, message, timeout
+	}) {
+
+	}
+
+	exitProgram(windowId, programId, error, returnValue) {
+		if (!this.model.windows[windowId]) {
+			throw new Error('The window is NOT found in agent.');
+		}
+
+		const programData = db.program.get(programId);
+
+		if (!programData) {
+			new Error('Program is NOT found.');
+		}
+
+		const windowData = db.window.get(windowId);
+
+		if (windowData.programData !== programData) {
+			new Error('The program dose NOT belongs to the window.');
+		}
+
 
 	}
 
@@ -33,7 +55,11 @@ module.exports = class Agent {
 
 	}
 
-	static select(id) {
+	static selectById(id) {
+
+	}
+
+	static selectOneIdle() {
 
 	}
 }

@@ -1,8 +1,6 @@
 
-// POST /agent
+// GET /agent
 
-// PUT /agent/:agentId
+// PUT /agent
 
-// PUT /agent/:agentId/window/:windowId/program/:programId
-
-// POST /agent/:agentId/window/:windowId/dialog
+// POST /agent/window/:windowId/dialog

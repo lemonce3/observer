@@ -2,19 +2,22 @@ const store = require('../store');
 
 let counter = 1;
 
-exports.add = function (masterId, windowId, name, args) {
+exports.add = function (masterId, windowId, name, args, timeout = 10000) {
 	const id = counter++;
 	const programData = store.program[id] = {
 		id,
 		masterId,
 		windowId,
+
 		name,
 		args,
-		exited: false,
+		
 		returnValue: undefined,
 		error: null,
 
-		createdAt: Date.now()
+		timeout,
+		calledAt: Date.now(),
+		exitedAt: null,
 	};
 
 	store.master[masterId].programs[id] = true;

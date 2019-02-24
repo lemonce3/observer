@@ -2,7 +2,7 @@
 
 // POST /master
 
-// GET /master/:masterId
+// PUT /master/:masterId
 
 // DELETE /master/:masterId
 
@@ -17,4 +17,8 @@
 // POST /master/:masterId/agent/:agentName/window/:windowId/program
 
 // POST /master/:masterId/agent/:agentName/window/:windowId/dialog/:dialogType/resolve
+
+		// if (!Object.keys(dialog).find(dialogType => dialogType === type)) {
+		// 	throw new Error('Invalid dialog type.');
+		// }
 
