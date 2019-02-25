@@ -1,34 +1,85 @@
 const db = require('../base');
 
 module.exports = class Agent {
-	constructor(id) {
-		this.model = db.agent.get(id);
+	constructor(data) {
+		this.data = data;
 	}
 
-	get id() {
-		return this.model.id;
+	get model() {
+
 	}
 
 	visit() {
-		this.model.visitedAt = Date.now();
+		this.data.visitedAt = Date.now();
+
+		return this;
 	}
 
-	appendWindow() {
+	update({ origin, modifier, pointer }) {
+		this.data.origin = origin;
+		
+		Object.assign(this.data.modifier, {
+			ctrl: Boolean(modifier.ctrl),
+			shift: Boolean(modifier.shift),
+			alt: Boolean(modifier.alt),
+			meta: Boolean(modifier.meta)
+		});
 
+		Object.assign(this.data.pointer, {
+			x: Number(pointer.x),
+			y: Number(pointer.y)
+		});
 	}
 
-	removeWindow() {
+	appendWindow(id) {
+		db.window.addToAgent(this.data.id, id);
 
+		return this;
 	}
 
-	openDialogByWindow(windowId, {
-		type, message, timeout
-	}) {
+	updateWindow(id, { meta, rect }) {
+		const windowData = db.window.get(id);
 
+		if (this.data.windows.indexOf(windowData.id) === -1) {
+			throw new Error('The window NOT belongs to this agent.');
+		}
+
+		Object.assign(windowData.meta, {
+			title: String(meta.title)
+		});
+
+		Object.assign(windowData.rect, {
+			width: parseInt(rect.width),
+			height: parseInt(rect.height),
+			top: parseInt(rect.top),
+			left: parseInt(rect.left)
+		});
+
+		return this;
+	}
+
+	removeWindow(id) {
+		db.window.del(id);
+
+		return this;
+	}
+
+	openDialogByWindow(windowId, type, message) {
+		const windowData = db.window.get(windowId);
+
+		if (this.data.id !== windowData.agentId) {
+			throw new Error('Window not in this agent.');
+		}
+
+		const ticket = Math.random().toString(16).substr(2, 8);
+
+		windowData.dialog[type] = { ticket, message };
+
+		return ticket;
 	}
 
 	exitProgram(windowId, programId, error, returnValue) {
-		if (!this.model.windows[windowId]) {
+		if (!this.data.windows[windowId]) {
 			throw new Error('The window is NOT found in agent.');
 		}
 
@@ -44,22 +95,58 @@ module.exports = class Agent {
 			new Error('The program dose NOT belongs to the window.');
 		}
 
+		programData.exitedAt = Date.now();
 
+		if (error !== null) {
+			programData.error = {
+				name: 'agent',
+				message: error
+			};
+		} else {
+			programData.returnValue = returnValue;
+		}
+
+		windowData.programId = null;
+		programData.windowId = null;
+
+		return this;
 	}
 
 	destroy() {
-		db.agent.del(this.id);
+		db.agent.del(this.data.id);
+
+		return this;
 	}
 	
 	static create() {
-
+		return new this(db.agent.add());
 	}
 
 	static selectById(id) {
+		const data = db.agent.get(id);
 
+		return data ? new this(data) : null;
 	}
 
-	static selectOneIdle() {
+	static selectOneIdle(options = {}) {
+		const now = Date.now();
 
+		const data = Object.keys(db.$store.agent).find(data => {
+			if (data.visitedAt + 100000 < now) {
+				return false;
+			}
+
+			if (data.masterId !== null) {
+				return false;
+			}
+
+			if (options.origin && options.origin !== data.origin) {
+				return false;
+			}
+
+			return true;
+		});
+
+		return data ? new this(data) : null;
 	}
 }

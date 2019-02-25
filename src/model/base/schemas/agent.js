@@ -8,9 +8,9 @@ exports.add = function () {
 
 	return store.agent[id] = {
 		id,
-		type: 'browser.base',
 		createdAt: now,
 		visitedAt: now,
+		origin: null,
 		masterId: null,
 		modifier: {
 			ctrl: false,

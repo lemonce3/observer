@@ -1,11 +1,16 @@
+const _ = require('lodash');
 const store = require('../store');
 
-let counter = 1;
+exports.addToAgent = function (agentId, windowId) {
+	if (!_.isNumber(agentId)) {
+		throw new Error('AgentId MUST be a number.');
+	}
 
-exports.addToAgent = function (agentId) {
+	if (!_.isString(windowId)) {
+		throw new Error('Window id MUST be a string.');
+	}
+
 	const agentData = store.agent[agentId];
-	const windowId = counter++;
-
 	const windowData = store.window[windowId] = {
 		id: windowId,
 		agentId,
@@ -21,9 +26,9 @@ exports.addToAgent = function (agentId) {
 			left: 0
 		},
 		dialog: {
-			alert: false,
-			confirm: false,
-			prompt: false
+			alert: null,
+			confirm: null,
+			prompt: null
 		}
 	};
 
@@ -36,10 +41,10 @@ exports.get = function (id) {
 	return store.window[id];
 };
 
-function deleteWindow (id) {
-	const windowData = store.window[id];
+function deleteWindow (hash) {
+	const windowData = store.window[hash];
 
-	delete store.window[id];
+	delete store.window[hash];
 	store.emit('window-delete', windowData);
 
 	return windowData;

@@ -1,6 +1,10 @@
 const assert = require('assert');
 const db = require('../src/model/base');
 
+function WindowId() {
+	return Math.random().toString(16).substr(2, 8);
+}
+
 describe('database::', function () {
 	this.afterEach(function () {
 		db.$store.master = {};
@@ -23,7 +27,7 @@ describe('database::', function () {
 
 	it('should create a window to existed agent correctly.', function () {
 		const agentData = db.agent.add();
-		const windowData = db.window.addToAgent(agentData.id);
+		const windowData = db.window.addToAgent(agentData.id, WindowId());
 
 		assert.equal(db.$store.window[windowData.id], windowData);
 		assert.equal(windowData.agentId, agentData.id);
@@ -57,7 +61,7 @@ describe('database::', function () {
 
 	it('should create a program to window by master correctly.', function () {
 		const agentData = db.agent.add();
-		const windowData = db.window.addToAgent(agentData.id);
+		const windowData = db.window.addToAgent(agentData.id, WindowId());
 		const masterData = db.master.add();
 
 		db.bind(masterData.id, 'main', agentData.id);
@@ -116,7 +120,7 @@ describe('database::', function () {
 
 	it('should delete a window with its agent updating correctly.', function () {
 		const agentData = db.agent.add();
-		const windowData = db.window.addToAgent(agentData.id);
+		const windowData = db.window.addToAgent(agentData.id, WindowId());
 		const deleted = db.window.del(windowData.id);
 
 		assert.equal(agentData.windows.length, 0);
@@ -126,7 +130,7 @@ describe('database::', function () {
 
 	it('should delete a agent with its window correctly.', function () {
 		const agentData = db.agent.add();
-		const windowData = db.window.addToAgent(agentData.id);
+		const windowData = db.window.addToAgent(agentData.id, WindowId());
 		const deleted = db.agent.del(agentData.id);
 
 		assert.strictEqual(deleted, agentData);
@@ -136,7 +140,7 @@ describe('database::', function () {
 
 	it('should delete a program correctly', function () {
 		const agentData = db.agent.add();
-		const windowData = db.window.addToAgent(agentData.id);
+		const windowData = db.window.addToAgent(agentData.id, WindowId());
 		const masterData = db.master.add();
 
 		db.bind(masterData.id, 'main', agentData.id);
@@ -152,7 +156,7 @@ describe('database::', function () {
 
 	it('should delete a agent with its window, a running program and binding master correctly.', function () {
 		const agentData = db.agent.add();
-		const windowData = db.window.addToAgent(agentData.id);
+		const windowData = db.window.addToAgent(agentData.id, WindowId());
 		const masterData = db.master.add();
 
 		db.bind(masterData.id, 'main', agentData.id);
@@ -170,7 +174,7 @@ describe('database::', function () {
 
 	it('should delete a master with its running program and binding agent with window correctly.', function () {
 		const agentData = db.agent.add();
-		const windowData = db.window.addToAgent(agentData.id);
+		const windowData = db.window.addToAgent(agentData.id, WindowId());
 		const masterData = db.master.add();
 
 		db.bind(masterData.id, 'main', agentData.id);

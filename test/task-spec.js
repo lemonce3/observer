@@ -1,7 +1,7 @@
 const assert = require('assert');
 const db = require('../src/model/base');
 
-describe.only('task::', function () {
+describe('task::', function () {
 	it('should destroy master when overtime', function (done) {
 		const masterData = db.master.add();
 
@@ -32,7 +32,7 @@ describe.only('task::', function () {
 
 	it('should assign `existedAt` and `error` of program when called overtime.', function (done) {
 		const agentData = db.agent.add();
-		const windowData = db.window.addToAgent(agentData.id);
+		const windowData = db.window.addToAgent(agentData.id, '472ac0f');
 		const masterData = db.master.add();
 
 		db.bind(masterData.id, 'main', agentData.id);

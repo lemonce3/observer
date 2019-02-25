@@ -1,60 +1,40 @@
 const _ = require('lodash');
 const db = require('../base');
 
-const dialog = {
-	alert(resolve) {
-		resolve();
-	},
-	confirm({
-		resolve
-	}, value) {
-		if (_.isBoolean(value)) {
-			resolve(value);
-		}
-
-		throw new Error('Value of a confirm dialog MUST be a boolean.');
-	},
-	prompt(resolve, value) {
-		if (_.isString(value)) {
-			resolve(value);
-		}
-
-		throw new Error('Value of a prompt dialog MUST be a string.');
-	}
-};
-
 module.exports = class Master {
-	constructor(model) {
-		this.model = model;
-	}
-
-	get id() {
-		return this.model.id;
+	constructor(data) {
+		this.data = data;
 	}
 
 	visit() {
-		this.model.visitedAt = Date.now();
+		this.data.visitedAt = Date.now();
+
+		return this;
 	}
 
-	bind(name, agent) {
-		
+	bind(name, agentId) {
+		db.bind(this.data.id, name, agentId);
+
+		return this;
 	}
 
 	unbind(name) {
-		const agentModel = this.model.agents[name];
+		db.unbind(this.data.id, name);
+
+		return this;
 	}
 	
 	execute(windowId, name, args = []) {
 		db.program.add(this.id, windowId, name, args);
+
+		return this;
 	}
 
-	closeDialog(agentName, windowId, {
-		type, returnValue, resolve
-	}) {
-		const agentData = db.agent.get( this.model.agents[agentName]);
+	closeDialog(agentName, windowId, type) {
+		const agentData = db.agent.get(this.data.agents[agentName]);
 		
 		if (agentData.windows.indexOf(windowId) === -1) {
-			throw new Error('There is not a specific window in agent.');
+			throw new Error('The specific window is NOT in agent.');
 		}
 
 		const windowData = db.window.get(windowId);
@@ -63,24 +43,30 @@ module.exports = class Master {
 			throw new Error(`The window is NOT blocked by ${type} dialog.`);
 		}
 		
-		dialog[type](returnValue, resolve);
+		const dialog = windowData.dialog[type];
+
+		if (dialog === null) {
+			throw new Error(`Dialog(type:${type}) is not acitved.`);
+		}
+
+		windowData.dialog[type] = null;
+
+		return dialog.ticket;
 	}
 
 	destroy() {
 		db.master.del(this.id);
+
+		return this;
 	}
 
 	static create() {
-
+		return new this(db.master.add());
 	}
 	
 	static select(id) {
-		const model = db.agent.get(id);
+		const data = db.agent.get(id);
 
-		if (!model) {
-			throw new Error('Master is NOT existed.');
-		}
-
-		return new this(model);
+		return data ? new this(data) : null;
 	}
 }
