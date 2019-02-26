@@ -22,32 +22,25 @@ router.get('/agent.html', ctx => {
 	ctx.body = agentHTML.replace('__REPLACEMENT__', JSON.stringify(agent.model));
 });
 
-router.put('/agent/:agentId', ctx => {
-	const { agentId } = ctx.params;
-	const agent = Agent.selectById(agentId);
+router.get('/agent', ctx => {
+	const agentList = ctx.body = Agent.selectAll();
 
-	if (agent === null) {
-		ctx.status = 404;
+	if (ctx.query.idle && ctx.query.idle === 'true') {
+		ctx.body = agentList.filter(agentData => {
+			return agentData.masterId === null;
+		});
 	}
+});
 
-	agent.visit();
+router.post('/agent/:agentId/window', function () {
 
-	const frontend = ctx.body;
+});
 
-	//TODO 更新pointer
-	agent.update(frontend);
-	
-	//TODO 打开窗口
-	agent.appendWindow();
+router.put('/agent/:agentId/window/:windowId', function () {
 
-	//TODO 更新窗口
-	agent.updateWindow();
+});
 
-	//TODO 销毁窗口
-	agent.removeWindow();
-
-	//TODO 更新程序返回
-	agent.exitProgram();
+router.del('/agent/:agentId/window/:windowId', function () {
 
 });
 

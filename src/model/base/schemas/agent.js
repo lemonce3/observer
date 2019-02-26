@@ -10,7 +10,6 @@ exports.add = function () {
 		id,
 		createdAt: now,
 		visitedAt: now,
-		origin: null,
 		masterId: null,
 		modifier: {
 			ctrl: false,

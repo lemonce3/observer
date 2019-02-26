@@ -1,4 +1,3 @@
-const _ = require('lodash');
 const db = require('../base');
 
 module.exports = class Master {
@@ -23,36 +22,6 @@ module.exports = class Master {
 
 		return this;
 	}
-	
-	execute(windowId, name, args = []) {
-		db.program.add(this.id, windowId, name, args);
-
-		return this;
-	}
-
-	closeDialog(agentName, windowId, type) {
-		const agentData = db.agent.get(this.data.agents[agentName]);
-		
-		if (agentData.windows.indexOf(windowId) === -1) {
-			throw new Error('The specific window is NOT in agent.');
-		}
-
-		const windowData = db.window.get(windowId);
-
-		if (windowData.dialog[type] === false) {
-			throw new Error(`The window is NOT blocked by ${type} dialog.`);
-		}
-		
-		const dialog = windowData.dialog[type];
-
-		if (dialog === null) {
-			throw new Error(`Dialog(type:${type}) is not acitved.`);
-		}
-
-		windowData.dialog[type] = null;
-
-		return dialog.ticket;
-	}
 
 	destroy() {
 		db.master.del(this.id);
@@ -65,8 +34,8 @@ module.exports = class Master {
 	}
 	
 	static select(id) {
-		const data = db.agent.get(id);
+		const data = db.master.get(id);
 
 		return data ? new this(data) : null;
 	}
-}
+};

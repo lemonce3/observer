@@ -1,5 +1,6 @@
 const assert = require('assert');
 const db = require('../src/model/base');
+const $store = require('../src/model/base/store');
 
 describe('task::', function () {
 	it('should destroy master when overtime', function (done) {
@@ -7,10 +8,10 @@ describe('task::', function () {
 
 		masterData.visitedAt = masterData.createdAt -= 9000;
 
-		assert.strictEqual(db.$store.master[masterData.id], masterData);
+		assert.strictEqual($store.master[masterData.id], masterData);
 
 		setTimeout(() => {
-			assert.strictEqual(db.$store.master[masterData.id], undefined);
+			assert.strictEqual($store.master[masterData.id], undefined);
 
 			done();
 		}, 2000);
@@ -21,10 +22,10 @@ describe('task::', function () {
 
 		agentData.visitedAt = agentData.createdAt -= 59000;
 
-		assert.strictEqual(db.$store.agent[agentData.id], agentData);
+		assert.strictEqual($store.agent[agentData.id], agentData);
 
 		setTimeout(() => {
-			assert.strictEqual(db.$store.agent[agentData.id], undefined);
+			assert.strictEqual($store.agent[agentData.id], undefined);
 
 			done();
 		}, 2000);

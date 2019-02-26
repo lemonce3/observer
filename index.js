@@ -1,6 +1,3 @@
-const randexp = require('randexp');
-const OBSERVER_HASH = randexp(/[a-f0-9]{8}/);
-
 const path = require('path');
 const Koa = require('koa');
 const bodyparser = require('koa-bodyparser');
@@ -11,6 +8,7 @@ global.config = require(path.resolve('config.json'));
 const router = require('./src/router');
 const app = new Koa();
 
+app.context.OBSERVER_HASH = Math.random().toString(16).substr(2, 8);
 app.context.dialog = {};
 app.use(bodyparser());
 app.use(router.routes());

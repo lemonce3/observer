@@ -1,4 +1,5 @@
-const store = exports.$store = require('./store');
+const store = require('./store');
+
 exports.agent = require('./schemas/agent');
 exports.master = require('./schemas/master');
 exports.program = require('./schemas/program');

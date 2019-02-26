@@ -1,23 +1,24 @@
 const _ = require('lodash');
 const store = require('../store');
 
-exports.addToAgent = function (agentId, windowId) {
+exports.addToAgent = function (agentId) {
 	if (!_.isNumber(agentId)) {
 		throw new Error('AgentId MUST be a number.');
 	}
 
-	if (!_.isString(windowId)) {
-		throw new Error('Window id MUST be a string.');
-	}
-
+	const windowId = Math.random().toString(16).substr(2, 8);
 	const agentData = store.agent[agentId];
 	const windowData = store.window[windowId] = {
 		id: windowId,
 		agentId,
 		createdAt: Date.now(),
+		visitedAt: null,
 		programId: null,
 		meta: {
 			title: null,
+			URL: null,
+			referrer: null,
+			domain: null
 		},
 		rect: {
 			width: 0,
@@ -41,10 +42,10 @@ exports.get = function (id) {
 	return store.window[id];
 };
 
-function deleteWindow (hash) {
-	const windowData = store.window[hash];
+function deleteWindow (id) {
+	const windowData = store.window[id];
 
-	delete store.window[hash];
+	delete store.window[id];
 	store.emit('window-delete', windowData);
 
 	return windowData;

@@ -1,5 +1,6 @@
 const assert = require('assert');
 const db = require('../src/model/base');
+const $store = require('../src/model/base/store');
 
 function WindowId() {
 	return Math.random().toString(16).substr(2, 8);
@@ -7,29 +8,29 @@ function WindowId() {
 
 describe('database::', function () {
 	this.afterEach(function () {
-		db.$store.master = {};
-		db.$store.agent = {};
-		db.$store.program = {};
-		db.$store.window = {};
+		$store.master = {};
+		$store.agent = {};
+		$store.program = {};
+		$store.window = {};
 	});
 
 	it('should create a master correctly.', function () {
 		const masterData = db.master.add();
 
-		assert.equal(db.$store.master[masterData.id], masterData);
+		assert.equal($store.master[masterData.id], masterData);
 	});
 
 	it('should create a agent correctly', function () {
 		const agentData = db.agent.add();
 
-		assert.equal(db.$store.agent[agentData.id], agentData);
+		assert.equal($store.agent[agentData.id], agentData);
 	});
 
 	it('should create a window to existed agent correctly.', function () {
 		const agentData = db.agent.add();
 		const windowData = db.window.addToAgent(agentData.id, WindowId());
 
-		assert.equal(db.$store.window[windowData.id], windowData);
+		assert.equal($store.window[windowData.id], windowData);
 		assert.equal(windowData.agentId, agentData.id);
 		assert.equal(agentData.windows[0], windowData.id);
 	});
@@ -79,7 +80,7 @@ describe('database::', function () {
 		const deleted = db.master.del(masterData.id);
 
 		assert.strictEqual(deleted, masterData);
-		assert.strictEqual(db.$store.master[masterData.id], undefined);
+		assert.strictEqual($store.master[masterData.id], undefined);
 	});
 
 	it('should delete a master with a binding agent correctly.', function () {
@@ -92,8 +93,8 @@ describe('database::', function () {
 
 		assert.strictEqual(deleted, masterData);
 		assert.strictEqual(agentData.masterId, null);
-		assert.strictEqual(db.$store.master[masterData.id], undefined);
-		assert.strictEqual(db.$store.agent[agentData.id], agentData);
+		assert.strictEqual($store.master[masterData.id], undefined);
+		assert.strictEqual($store.agent[agentData.id], agentData);
 	});
 
 	it('should delete a agent correctly', function () {
@@ -105,8 +106,8 @@ describe('database::', function () {
 		const deleted = db.agent.del(agentData.id);
 
 		assert.strictEqual(deleted, agentData);
-		assert.strictEqual(db.$store.agent[agentData.id], undefined);
-		assert.strictEqual(db.$store.master[masterData.id], masterData);
+		assert.strictEqual($store.agent[agentData.id], undefined);
+		assert.strictEqual($store.master[masterData.id], masterData);
 		assert.strictEqual(masterData.agents['main'], undefined);
 	});
 
@@ -115,7 +116,7 @@ describe('database::', function () {
 		const deleted = db.agent.del(agentData.id);
 
 		assert.strictEqual(deleted, agentData);
-		assert.strictEqual(db.$store.agent[agentData.id], undefined);
+		assert.strictEqual($store.agent[agentData.id], undefined);
 	});
 
 	it('should delete a window with its agent updating correctly.', function () {
@@ -124,7 +125,7 @@ describe('database::', function () {
 		const deleted = db.window.del(windowData.id);
 
 		assert.equal(agentData.windows.length, 0);
-		assert.strictEqual(db.$store.window[windowData.id], undefined);
+		assert.strictEqual($store.window[windowData.id], undefined);
 		assert.strictEqual(deleted, windowData);
 	});
 
@@ -134,8 +135,8 @@ describe('database::', function () {
 		const deleted = db.agent.del(agentData.id);
 
 		assert.strictEqual(deleted, agentData);
-		assert.strictEqual(db.$store.window[windowData.id], undefined);
-		assert.strictEqual(db.$store.agent[agentData.id], undefined);
+		assert.strictEqual($store.window[windowData.id], undefined);
+		assert.strictEqual($store.agent[agentData.id], undefined);
 	});
 
 	it('should delete a program correctly', function () {
@@ -165,10 +166,10 @@ describe('database::', function () {
 		const deleted = db.agent.del(agentData.id);
 
 		assert.strictEqual(deleted, agentData);
-		assert.strictEqual(db.$store.master[masterData.id], masterData);
-		assert.strictEqual(db.$store.program[programData.id], undefined);
-		assert.strictEqual(db.$store.window[windowData.id], undefined);
-		assert.strictEqual(db.$store.agent[agentData.id], undefined);
+		assert.strictEqual($store.master[masterData.id], masterData);
+		assert.strictEqual($store.program[programData.id], undefined);
+		assert.strictEqual($store.window[windowData.id], undefined);
+		assert.strictEqual($store.agent[agentData.id], undefined);
 		assert.strictEqual(masterData.programs[programData.id], undefined);
 	});
 
@@ -183,10 +184,10 @@ describe('database::', function () {
 		const deleted = db.master.del(masterData.id);
 
 		assert.strictEqual(deleted, masterData);
-		assert.strictEqual(db.$store.master[masterData.id], undefined);
-		assert.strictEqual(db.$store.program[programData.id], undefined);
-		assert.strictEqual(db.$store.window[windowData.id], windowData);
-		assert.strictEqual(db.$store.agent[agentData.id], agentData);
+		assert.strictEqual($store.master[masterData.id], undefined);
+		assert.strictEqual($store.program[programData.id], undefined);
+		assert.strictEqual($store.window[windowData.id], windowData);
+		assert.strictEqual($store.agent[agentData.id], agentData);
 		assert.strictEqual(agentData.masterId, null);
 	});
 });
