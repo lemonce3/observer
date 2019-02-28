@@ -1,4 +1,10 @@
 const db = require('../base');
+const _ = require('lodash');
+
+const localKeys = ['id', 'createdAt', 'visitedAt', 'agents', 'programs'];
+const agentKeys = ['id', 'createdAt', 'visitedAt', 'modifier', 'pointer'];
+const programKeys = ['id', 'name', 'args', 'error', 'returnValue', 'exitedAt'];
+const windowKeys = ['id', 'createdAt', 'visitedAt', 'meta', 'rect'];
 
 module.exports = class Master {
 	constructor(data) {
@@ -6,7 +12,25 @@ module.exports = class Master {
 	}
 
 	get model() {
-		return this;
+		const local = Object.assign(_.pick(this.data, localKeys), {
+			agents: {},
+			programs: {}
+		});
+
+		Object.keys(this.data.agents).forEach(agentId => {
+			const agentData = db.agent.get(agentId);
+			const agent = local.agents[agentId] = _.pick(agentData, agentKeys);
+
+			agent.windows = agentData.windows.map(windowId => {
+				return _.pick(db.window.get(windowId), windowKeys);
+			});
+		});
+
+		Object.keys(this.data.programs).forEach(programId => {
+			local.programs[programId] = _.pick(db.program.get(programId), programKeys);
+		});
+
+		return local;
 	}
 
 	visit() {

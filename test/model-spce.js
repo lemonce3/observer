@@ -1,5 +1,4 @@
 const assert = require('assert');
-const db = require('../src/model/base');
 const $store = require('../src/model/base/store');
 const { Agent, Master, Window, Program } = require('../src/model');
 
@@ -306,14 +305,101 @@ describe('object::', function () {
 		});
 
 		describe('#model', function () {
-			let window;
-
 			it('Without program.', function () {
+				const agent = Agent.create();
+				const window = Window.create(agent.data.id);
 
+				assert.deepEqual(window.model, {
+					id: window.data.id,
+					createdAt: window.data.createdAt,
+					visitedAt: window.data.visitedAt,
+					meta: {
+						title: null,
+						URL: null,
+						domain: null,
+						referrer: null
+					},
+					rect: {
+						width: 0,
+						height: 0,
+						top: 0,
+						left: 0
+					},
+					program: null,
+					agent: {
+						id: agent.data.id,
+						createdAt: agent.data.createdAt,
+						visitedAt: agent.data.visitedAt,
+						masterId: null,
+						modifier: {
+							ctrl: false,
+							shift: false,
+							alt: false,
+							meta: false
+						},
+						pointer: {
+							x: 0,
+							y: 0
+						}
+					}
+				});
 			});
 
 			it('With program.', function () {
-				
+				const master = Master.create();
+				const agent = Agent.create();
+				const window = Window.create(agent.data.id);
+
+				master.bind(agent.data.id);
+
+				const program = Program.create({
+					windowId: window.data.id,
+					masterId: master.data.id,
+					name: 'program.test',
+					args: []
+				});
+
+				assert.deepEqual(window.model, {
+					id: window.data.id,
+					createdAt: window.data.createdAt,
+					visitedAt: window.data.visitedAt,
+					meta: {
+						title: null,
+						URL: null,
+						domain: null,
+						referrer: null
+					},
+					rect: {
+						width: 0,
+						height: 0,
+						top: 0,
+						left: 0
+					},
+					program: {
+						id: program.data.id,
+						name: 'program.test',
+						args: [],
+						error: null,
+						returnValue: undefined,
+						exitedAt: null
+					},
+					agent: {
+						id: agent.data.id,
+						createdAt: agent.data.createdAt,
+						visitedAt: agent.data.visitedAt,
+						masterId: master.data.id,
+						modifier: {
+							ctrl: false,
+							shift: false,
+							alt: false,
+							meta: false
+						},
+						pointer: {
+							x: 0,
+							y: 0
+						}
+					}
+				});
 			});
 		});
 	});
@@ -408,7 +494,64 @@ describe('object::', function () {
 		});
 
 		describe('#model', function () {
-			it('model structure of master is in expected.');
+			it('model structure of master is in expected.', function () {
+				const master = Master.create();
+				const agent1 = Agent.create();
+				const agent2 = Agent.create();
+				const window = Window.create(agent1.data.id);
+
+				master.bind(agent1.data.id);
+				master.bind(agent2.data.id);
+
+				const program = Program.create({
+					windowId: window.data.id,
+					masterId: master.data.id,
+					name: 'program.test',
+					args: []
+				});
+
+				assert.deepEqual(master.model, {
+					id: master.data.id,
+					createdAt: master.data.createdAt,
+					visitedAt: master.data.visitedAt,
+					programs: {
+						[program.data.id]: {
+							id: program.data.id,
+							name: 'program.test',
+							args: [],
+							error: null,
+							returnValue: undefined,
+							exitedAt: null
+						}
+					},
+					agents: {
+						[agent1.data.id]: {
+							id: agent1.data.id,
+							createdAt: agent1.data.createdAt,
+							visitedAt: agent1.data.visitedAt,
+							modifier: { alt: false, ctrl: false, meta: false, shift: false },
+							pointer: { x: 0, y: 0 },
+							windows: [
+								{
+									id: window.data.id,
+									createdAt: window.data.createdAt,
+									visitedAt: window.data.visitedAt,
+									meta: { URL: null, domain: null, referrer: null, title: null },
+									rect: { height: 0, width: 0, top: 0, left: 0 }
+								}
+							]
+						},
+						[agent2.data.id]: {
+							id: agent2.data.id,
+							createdAt: agent2.data.createdAt,
+							visitedAt: agent2.data.visitedAt,
+							modifier: { alt: false, ctrl: false, meta: false, shift: false },
+							pointer: { x: 0, y: 0 },
+							windows: []
+						}
+					}
+				});
+			});
 		});
 	});
 

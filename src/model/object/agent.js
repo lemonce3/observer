@@ -6,10 +6,6 @@ module.exports = class Agent {
 		this.data = data;
 	}
 
-	get model() {
-
-	}
-
 	visit() {
 		this.data.visitedAt = Date.now();
 
