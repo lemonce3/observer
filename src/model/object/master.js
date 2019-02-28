@@ -5,14 +5,18 @@ module.exports = class Master {
 		this.data = data;
 	}
 
+	get model() {
+		return this;
+	}
+
 	visit() {
 		this.data.visitedAt = Date.now();
 
 		return this;
 	}
 
-	bind(name, agentId) {
-		db.bind(this.data.id, name, agentId);
+	bind(agentId) {
+		db.bind(this.data.id, agentId);
 
 		return this;
 	}
@@ -24,7 +28,7 @@ module.exports = class Master {
 	}
 
 	destroy() {
-		db.master.del(this.id);
+		db.master.del(this.data.id);
 
 		return this;
 	}

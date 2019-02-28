@@ -6,7 +6,7 @@ module.exports = class Window {
 	}
 
 	get model() {
-
+		return this;
 	}
 
 	visit() {
@@ -14,37 +14,11 @@ module.exports = class Window {
 
 		return this;
 	}
-	
-	callProgram(name, args = []) {
-		db.program.add(this.id, this.data.id, name, args);
 
-		return this;
-	}
-
-	exitProgram(programId, error, returnValue) {
-		const programData = db.program.get(programId);
-
-		programData.exitedAt = Date.now();
-
-		if (error !== null) {
-			programData.error = {
-				name: 'agent',
-				message: error
-			};
-		} else {
-			programData.returnValue = returnValue;
-		}
-
-		this.data.programId = null;
-		programData.windowId = null;
-
-		return this;
-	}
-
-	openDialogByWindow(type, message, ticket) {
+	openDialog(type, message, ticket) {
 		this.data.dialog[type] = { ticket, message };
 
-		return ticket;
+		return this;
 	}
 
 	closeDialog(type) {

@@ -12,8 +12,7 @@ exports.add = function () {
 		visitedAt: now,
 		agents: {},
 		programs: {},
-		log: [],
-		destroyed: false
+		log: []
 	};
 };
 
@@ -33,13 +32,7 @@ exports.del = function (id) {
 store.on('agent-delete', agentData => {
 	if (agentData.masterId !== null) {
 		const masterData = store.master[agentData.masterId];
-
-		for(let name in masterData.agents) {
-			if (masterData.agents[name] === agentData.id) {
-				delete masterData.agents[name];
-				break;
-			}
-		}
+		delete masterData.agents[agentData.id];
 	}
 });
 

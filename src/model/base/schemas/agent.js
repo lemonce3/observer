@@ -48,8 +48,7 @@ store.on('window-delete', windowData => {
 });
 
 store.on('master-delete', masterData => {
-	for (let name in masterData.agents) {
-		const agentId = masterData.agents[name];
+	for (let agentId in masterData.agents) {
 		const agentData = store.agent[agentId];
 
 		agentData.masterId = null;

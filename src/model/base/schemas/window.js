@@ -7,12 +7,13 @@ exports.addToAgent = function (agentId) {
 	}
 
 	const windowId = Math.random().toString(16).substr(2, 8);
+	const now = Date.now();
 	const agentData = store.agent[agentId];
 	const windowData = store.window[windowId] = {
 		id: windowId,
 		agentId,
-		createdAt: Date.now(),
-		visitedAt: null,
+		createdAt: now,
+		visitedAt: now,
 		programId: null,
 		meta: {
 			title: null,

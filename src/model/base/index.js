@@ -5,21 +5,20 @@ exports.master = require('./schemas/master');
 exports.program = require('./schemas/program');
 exports.window = require('./schemas/window');
 
-exports.bind = function (masterId, name, agentId) {
+exports.bind = function (masterId, agentId) {
 	const masterData = store.master[masterId];
 	const agentData = store.agent[agentId];
 
-	masterData.agents[name] = agentData.id;
+	masterData.agents[agentData.id] = true;
 	agentData.masterId = masterId;
 };
 
-exports.unbind = function (masterId, name) {
+exports.unbind = function (masterId, agentId) {
 	const masterData = store.master[masterId];
-	const agentId = masterData.agents[name];
 	const agentData = store.agent[agentId];
 
 	agentData.masterId = null;
-	delete masterData.agents[name];
+	delete masterData.agents[agentId];
 };
 
 require('./task');

@@ -33,12 +33,12 @@ describe('task::', function () {
 
 	it('should assign `existedAt` and `error` of program when called overtime.', function (done) {
 		const agentData = db.agent.add();
-		const windowData = db.window.addToAgent(agentData.id, '472ac0f');
+		const windowData = db.window.addToAgent(agentData.id);
 		const masterData = db.master.add();
 
-		db.bind(masterData.id, 'main', agentData.id);
+		db.bind(masterData.id, agentData.id);
 
-		const programData = db.program.add(masterData.id, windowData.id, 'main');
+		const programData = db.program.add(masterData.id, windowData.id, 'test.program');
 
 		programData.timeout = 1000;
 		

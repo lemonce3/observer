@@ -39,9 +39,9 @@ describe('database::', function () {
 		const agentData = db.agent.add();
 		const masterData = db.master.add();
 
-		db.bind(masterData.id, 'main', agentData.id);
+		db.bind(masterData.id, agentData.id);
 
-		assert.equal(masterData.agents['main'], agentData.id);
+		assert.strictEqual(masterData.agents[agentData.id], true);
 		assert.equal(agentData.masterId, masterData.id);
 	});
 	
@@ -49,14 +49,14 @@ describe('database::', function () {
 		const agentData = db.agent.add();
 		const masterData = db.master.add();
 
-		db.bind(masterData.id, 'main', agentData.id);
+		db.bind(masterData.id, agentData.id);
 
-		assert.equal(masterData.agents['main'], agentData.id);
+		assert.strictEqual(masterData.agents[agentData.id], true);
 		assert.equal(agentData.masterId, masterData.id);
 
-		db.unbind(masterData.id, 'main');
+		db.unbind(masterData.id, agentData.id);
 
-		assert.strictEqual(masterData.agents['main'], undefined);
+		assert.strictEqual(masterData.agents[agentData.id], undefined);
 		assert.strictEqual(agentData.masterId, null);
 	});
 
@@ -65,9 +65,9 @@ describe('database::', function () {
 		const windowData = db.window.addToAgent(agentData.id, WindowId());
 		const masterData = db.master.add();
 
-		db.bind(masterData.id, 'main', agentData.id);
+		db.bind(masterData.id, agentData.id);
 
-		const programData = db.program.add(masterData.id, windowData.id, 'main');
+		const programData = db.program.add(masterData.id, windowData.id, 'test.program');
 
 		assert.equal(programData.masterId, masterData.id);
 		assert.equal(programData.windowId, windowData.id);
@@ -87,7 +87,7 @@ describe('database::', function () {
 		const agentData = db.agent.add();
 		const masterData = db.master.add();
 
-		db.bind(masterData.id, 'main', agentData.id);
+		db.bind(masterData.id, agentData.id);
 
 		const deleted = db.master.del(masterData.id);
 
@@ -101,14 +101,14 @@ describe('database::', function () {
 		const agentData = db.agent.add();
 		const masterData = db.master.add();
 
-		db.bind(masterData.id, 'main', agentData.id);
+		db.bind(masterData.id, agentData.id);
 		
 		const deleted = db.agent.del(agentData.id);
 
 		assert.strictEqual(deleted, agentData);
 		assert.strictEqual($store.agent[agentData.id], undefined);
 		assert.strictEqual($store.master[masterData.id], masterData);
-		assert.strictEqual(masterData.agents['main'], undefined);
+		assert.strictEqual(masterData.agents[agentData.id], undefined);
 	});
 
 	it('should delete a agent with its binding master correctly', function () {
@@ -144,9 +144,9 @@ describe('database::', function () {
 		const windowData = db.window.addToAgent(agentData.id, WindowId());
 		const masterData = db.master.add();
 
-		db.bind(masterData.id, 'main', agentData.id);
+		db.bind(masterData.id, agentData.id);
 
-		const programData = db.program.add(masterData.id, windowData.id, 'main');
+		const programData = db.program.add(masterData.id, windowData.id, 'test.program');
 		
 		db.program.del(programData.id);
 
@@ -160,9 +160,9 @@ describe('database::', function () {
 		const windowData = db.window.addToAgent(agentData.id, WindowId());
 		const masterData = db.master.add();
 
-		db.bind(masterData.id, 'main', agentData.id);
+		db.bind(masterData.id, agentData.id);
 
-		const programData = db.program.add(masterData.id, windowData.id, 'main');
+		const programData = db.program.add(masterData.id, windowData.id, 'test.program');
 		const deleted = db.agent.del(agentData.id);
 
 		assert.strictEqual(deleted, agentData);
@@ -178,9 +178,9 @@ describe('database::', function () {
 		const windowData = db.window.addToAgent(agentData.id, WindowId());
 		const masterData = db.master.add();
 
-		db.bind(masterData.id, 'main', agentData.id);
+		db.bind(masterData.id, agentData.id);
 
-		const programData = db.program.add(masterData.id, windowData.id, 'main');
+		const programData = db.program.add(masterData.id, windowData.id, 'test.program');
 		const deleted = db.master.del(masterData.id);
 
 		assert.strictEqual(deleted, masterData);
