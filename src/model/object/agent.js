@@ -32,8 +32,8 @@ module.exports = class Agent {
 		return this;
 	}
 	
-	static create() {
-		return new this(db.agent.add());
+	static create(ua) {
+		return new this(db.agent.add(ua));
 	}
 
 	static selectById(id) {

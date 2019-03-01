@@ -2,8 +2,8 @@ const db = require('../base');
 const _ = require('lodash');
 
 const localKeys = ['id', 'createdAt', 'visitedAt', 'meta', 'rect'];
-const programKeys = ['id', 'name', 'args', 'error', 'returnValue', 'exitedAt'];
-const agentKeys = ['id', 'createdAt', 'visitedAt', 'masterId', 'modifier', 'pointer'];
+const programKeys = ['id', 'name', 'args', 'error', 'returnValue'];
+const agentKeys = ['id', 'createdAt', 'visitedAt', 'masterId', 'modifier', 'pointer', 'ua'];
 
 module.exports = class Window {
 	constructor(data) {
@@ -13,7 +13,16 @@ module.exports = class Window {
 	get model() {
 		const local = _.pick(this.data, localKeys);
 		const programId = this.data.programId;
-		const program = programId ? _.pick(db.program.get(programId), programKeys) : null;
+
+		let program = null;
+
+		if (programId) {
+			const programData = db.program.get(programId);
+			
+			program = _.pick(programData, programKeys);
+			program.isExited = Boolean(programData.exitedAt);
+		}
+
 		const agent = _.pick(db.agent.get(this.data.agentId), agentKeys);
 
 		local.program = program;

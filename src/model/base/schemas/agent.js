@@ -2,12 +2,13 @@ const store = require('../store');
 
 let counter = 1;
 
-exports.add = function () {
+exports.add = function (ua = null) {
 	const id = counter++;
 	const now = Date.now();
 
 	return store.agent[id] = {
 		id,
+		ua,
 		createdAt: now,
 		visitedAt: now,
 		masterId: null,

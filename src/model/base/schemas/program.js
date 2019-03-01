@@ -12,6 +12,7 @@ exports.add = function (masterId, windowId, name, args, timeout = 10000) {
 		name,
 		args,
 		
+		isExited: false,
 		returnValue: undefined,
 		error: null,
 

@@ -14,12 +14,13 @@ describe('object::', function () {
 	describe('Agent', function () {
 		describe('create()', function () {
 			it('should create a master successfully', function () {
-				const agent = Agent.create();
+				const agent = Agent.create('test ua');
 				const agentData = agent.data;
 	
 				assert.equal($store.agent[agentData.id], agentData);
 				assert.deepStrictEqual(agentData, {
 					id: agentData.id,
+					ua: 'test ua',
 					createdAt: agentData.createdAt,
 					visitedAt: agentData.visitedAt,
 					masterId: null,
@@ -111,6 +112,7 @@ describe('object::', function () {
 	
 				assert.deepStrictEqual(agentData, {
 					id: agentData.id,
+					ua: null,
 					createdAt: agentData.createdAt,
 					visitedAt: agentData.visitedAt,
 					masterId: null,
@@ -328,6 +330,7 @@ describe('object::', function () {
 					program: null,
 					agent: {
 						id: agent.data.id,
+						ua: null,
 						createdAt: agent.data.createdAt,
 						visitedAt: agent.data.visitedAt,
 						masterId: null,
@@ -381,10 +384,11 @@ describe('object::', function () {
 						args: [],
 						error: null,
 						returnValue: undefined,
-						exitedAt: null
+						isExited: false
 					},
 					agent: {
 						id: agent.data.id,
+						ua: null,
 						createdAt: agent.data.createdAt,
 						visitedAt: agent.data.visitedAt,
 						masterId: master.data.id,
@@ -521,7 +525,8 @@ describe('object::', function () {
 							args: [],
 							error: null,
 							returnValue: undefined,
-							exitedAt: null
+							exitedAt: null,
+							windowId: window.data.id
 						}
 					},
 					agents: {
@@ -537,7 +542,8 @@ describe('object::', function () {
 									createdAt: window.data.createdAt,
 									visitedAt: window.data.visitedAt,
 									meta: { URL: null, domain: null, referrer: null, title: null },
-									rect: { height: 0, width: 0, top: 0, left: 0 }
+									rect: { height: 0, width: 0, top: 0, left: 0 },
+									dialog: { alert: null, confirm: null, prompt: null }
 								}
 							]
 						},
