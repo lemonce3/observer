@@ -15,3 +15,5 @@ app.use(router.routes());
 app.use(serve(path.resolve(config.static.path)));
 
 app.listen(config.http.port, config.http.host);
+
+console.log(`Host: ${config.http.host}, Port: ${config.http.port}`);
