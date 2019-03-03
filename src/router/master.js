@@ -1,13 +1,25 @@
 const Router = require('koa-router');
 const router = module.exports = new Router();
-const dialog = require('../dialog');
+// const dialog = require('../dialog');
 const _ = require('lodash');
-const { Master, Window, Program, Agent } = require('../model');
+const { Master, Window, Agent } = require('../model');
 
-const DIALOG_TYPE_LIST = [];
+const DIALOG_TYPE_LIST = ['alert', 'confirm', 'prompt'];
 
 router.post('/master', ctx => {
-	const { agents } = ctx.body;
+	const { agents = [] } = ctx.request.body;
+
+	if (!_.isArray(agents)) {
+		return ctx.throw(400, 'Agents must be an array.');
+	}
+
+	if (agents.find(agentId => Agent.selectById(agentId) === null)) {
+		return ctx.throw(404, 'A specific agent is NOT found.');
+	}
+
+	if (agents.find(agentId => Agent.selectById(agentId).data.masterId !== null)) {
+		return ctx.throw(409, 'A specific agent is busy.');
+	}
 
 	const master = Master.create();
 	agents.forEach(agentId => master.bind(agentId));
@@ -16,7 +28,7 @@ router.post('/master', ctx => {
 });
 
 router.put('/master/:masterId', ctx => {
-	const { body } = ctx.body;
+	const { body } = ctx.request;
 	const { masterId } = ctx.params;
 	const master = Master.select(masterId);
 
@@ -26,29 +38,6 @@ router.put('/master/:masterId', ctx => {
 	
 	master.visit();
 
-	/**
-	 * If the program data is not in body program, destroy it.
-	 */
-	Object.keys(master.data.programs).map(programId => {
-		return Program.select(programId);
-	}).filter(program => {
-		return !body.programs[program.data.id];
-	}).forEach(program => {
-		program.destroy();
-	});
-
-	/**
-	 * If the body data is not in program data, create it.
-	 */
-	Object.keys(body.programs).forEach(program => {
-		if (Program.select(program.id) === null) {
-			Program.create(masterId, program.windowId, program.name, program.args);
-		}
-	});
-
-	/**
-	 * If dialog value assigned, resolve it.
-	 */
 	Object.keys(body.agents).forEach(agentId => {
 		const agent = Agent.selectById(agentId);
 		const agentBody = body.agents[agentId];
@@ -56,15 +45,29 @@ router.put('/master/:masterId', ctx => {
 		agent.update(agentBody);
 
 		agentBody.windows.forEach(windowBody => {
+			const window = Window.select(windowBody.id);
+
+			/**
+			 * Resolve dialog
+			 */
 			DIALOG_TYPE_LIST.forEach(type => {
 				const dialogBody = windowBody.dialog[type];
 
-				if (dialogBody !== null && dialogBody.value !== null) {
-					const window = Window.select(windowBody.id);
+				if (dialogBody !== null && dialogBody.value !== undefined) {
+					const resolve = ctx.dialog[window.closeDialog(type)];
 
-					ctx.dialog[window.closeDialog(type)](dialogBody.value);
+					resolve && resolve(dialogBody.value);
 				}
 			});
+
+			/**
+			 * Call program
+			 */
+			const { hash, name, args, timeout = 10000 } = windowBody.program;
+
+			if (hash !== window.data.program.hash) {
+				window.callProgram(hash, name, args, timeout );
+			}
 		});
 	});
 

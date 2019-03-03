@@ -1,7 +1,6 @@
 const store = require('./store');
 const agent = require('./schemas/agent');
 const master = require('./schemas/master');
-const program = require('./schemas/program');
 
 const taskList = [];
 
@@ -41,32 +40,3 @@ task('gc.master', now => {
 		}
 	}
 });
-
-const PROGRAM_EXIT_FETCH_OVERTIME = 5000;
-
-task('program.timeout', now => {
-	for (let programId in store.program) {
-		const programData = store.program[programId];
-
-		if (programData.exitedAt === null) {
-			const { calledAt, timeout, windowId } = programData;
-
-			if (calledAt + timeout < now) {
-				const windowData = store.window[windowId];
-				
-				windowData.programId = null;
-				programData.exitedAt = now;
-				programData.error = {
-					name: 'observer',
-					message: 'The program execution is timeout or no response.'
-				};
-			}
-
-			return;
-		}
-
-		if (programData.exitedAt + PROGRAM_EXIT_FETCH_OVERTIME < now) {
-			program.del(programId);
-		}
-	}
-}, 100);

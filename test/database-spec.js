@@ -10,7 +10,6 @@ describe('database::', function () {
 	this.afterEach(function () {
 		$store.master = {};
 		$store.agent = {};
-		$store.program = {};
 		$store.window = {};
 	});
 
@@ -58,21 +57,6 @@ describe('database::', function () {
 
 		assert.strictEqual(masterData.agents[agentData.id], undefined);
 		assert.strictEqual(agentData.masterId, null);
-	});
-
-	it('should create a program to window by master correctly.', function () {
-		const agentData = db.agent.add();
-		const windowData = db.window.addToAgent(agentData.id, WindowId());
-		const masterData = db.master.add();
-
-		db.bind(masterData.id, agentData.id);
-
-		const programData = db.program.add(masterData.id, windowData.id, 'test.program');
-
-		assert.equal(programData.masterId, masterData.id);
-		assert.equal(programData.windowId, windowData.id);
-		assert.equal(windowData.programId, programData.id);
-		assert.strictEqual(masterData.programs[programData.id], true);
 	});
 
 	it('should delete a master correctly.', function () {
@@ -137,57 +121,5 @@ describe('database::', function () {
 		assert.strictEqual(deleted, agentData);
 		assert.strictEqual($store.window[windowData.id], undefined);
 		assert.strictEqual($store.agent[agentData.id], undefined);
-	});
-
-	it('should delete a program correctly', function () {
-		const agentData = db.agent.add();
-		const windowData = db.window.addToAgent(agentData.id, WindowId());
-		const masterData = db.master.add();
-
-		db.bind(masterData.id, agentData.id);
-
-		const programData = db.program.add(masterData.id, windowData.id, 'test.program');
-		
-		db.program.del(programData.id);
-
-		assert.equal(windowData.programId, null);
-		assert.strictEqual(masterData.programs[programData.id], undefined);
-		assert.strictEqual(masterData.programs[programData.id], undefined);
-	});
-
-	it('should delete a agent with its window, a running program and binding master correctly.', function () {
-		const agentData = db.agent.add();
-		const windowData = db.window.addToAgent(agentData.id, WindowId());
-		const masterData = db.master.add();
-
-		db.bind(masterData.id, agentData.id);
-
-		const programData = db.program.add(masterData.id, windowData.id, 'test.program');
-		const deleted = db.agent.del(agentData.id);
-
-		assert.strictEqual(deleted, agentData);
-		assert.strictEqual($store.master[masterData.id], masterData);
-		assert.strictEqual($store.program[programData.id], undefined);
-		assert.strictEqual($store.window[windowData.id], undefined);
-		assert.strictEqual($store.agent[agentData.id], undefined);
-		assert.strictEqual(masterData.programs[programData.id], undefined);
-	});
-
-	it('should delete a master with its running program and binding agent with window correctly.', function () {
-		const agentData = db.agent.add();
-		const windowData = db.window.addToAgent(agentData.id, WindowId());
-		const masterData = db.master.add();
-
-		db.bind(masterData.id, agentData.id);
-
-		const programData = db.program.add(masterData.id, windowData.id, 'test.program');
-		const deleted = db.master.del(masterData.id);
-
-		assert.strictEqual(deleted, masterData);
-		assert.strictEqual($store.master[masterData.id], undefined);
-		assert.strictEqual($store.program[programData.id], undefined);
-		assert.strictEqual($store.window[windowData.id], windowData);
-		assert.strictEqual($store.agent[agentData.id], agentData);
-		assert.strictEqual(agentData.masterId, null);
 	});
 });

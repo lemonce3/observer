@@ -2,43 +2,42 @@ const Router = require('koa-router');
 const router = module.exports = new Router();
 const dialog = require('../dialog');
 const _ = require('lodash');
-const { Window, Program, Agent } = require('../model');
+const { Window, Agent } = require('../model');
 
 const DIALOG_TIMEOUT = 10000;
 
 router.post('/window', ctx => {
-	const { agentId } = ctx.body;
+	const { agentId } = ctx.request.body;
 
 	if (!_.isNumber(agentId)) {
 		return ctx.status = 400;
 	}
 
-	const window = Window.create(agentId);
+	if (Agent.selectById(agentId) === null) {
+		return ctx.throw(404, 'Agent is NOT found.');
+	}
 
-	ctx.body = window.model;
+	ctx.body = Window.create(agentId).model;
 });
 
 router.put('/window/:windowId', ctx => {
-	const { body } = ctx.body;
+	const { body } = ctx.request;
 	const { windowId } = ctx.params;
 	const window = Window.select(windowId);
 
 	if (window === null) {
-		return ctx.status = 404;
+		return ctx.throw(404, 'Window is NOT found.');
 	}
 
-	Agent.selectById(window.data.agentId).visit();	
+	Agent.selectById(window.data.agentId).visit();
 	window.visit().update(body);
 
 	const programBody = body.program;
 
-	if (programBody !== null && programBody.exited) {
-		const { id, error, returnValue, isExited } = programBody;
-		const program = Program.select(id);
+	if (programBody.isExited && !window.data.program.isExited) {
+		const { error, returnValue } = programBody;
 
-		if (isExited) {
-			program.exit(error, returnValue);
-		}
+		window.exitProgram(error, returnValue);
 	}
 
 	ctx.body = window.model;
@@ -49,7 +48,7 @@ router.del('/window/:windowId', ctx => {
 	const window = Window.select(windowId);
 
 	if (window === null) {
-		return ctx.status = 404;
+		return ctx.throw(404, 'Window is NOT found.');
 	}
 
 	ctx.body = window.model;
@@ -59,7 +58,7 @@ router.del('/window/:windowId', ctx => {
 
 router.post('/window/:windowId/dialog', async ctx => {
 	const { windowId } = ctx.params;
-	const { type, message } = ctx.body;
+	const { type, message, timeout } = ctx.request.body;
 
 	if (!dialog.isValidType(type)) {
 		return ctx.status = 400;
@@ -79,7 +78,7 @@ router.post('/window/:windowId/dialog', async ctx => {
 
 	await new Promise((resolve, reject) => {
 		ctx.dialog[ticket] = resolve;
-		timer = setTimeout(() => reject(new Error('Dialog timeout')), DIALOG_TIMEOUT);
+		timer = setTimeout(() => reject(new Error('Dialog timeout')), timeout || DIALOG_TIMEOUT);
 	}).then(value => {
 		ctx.body = { value };
 		clearTimeout(timer);

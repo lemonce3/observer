@@ -11,7 +11,6 @@ exports.add = function () {
 		createdAt: now,
 		visitedAt: now,
 		agents: {},
-		programs: {},
 		log: []
 	};
 };
@@ -33,17 +32,5 @@ store.on('agent-delete', agentData => {
 	if (agentData.masterId !== null) {
 		const masterData = store.master[agentData.masterId];
 		delete masterData.agents[agentData.id];
-	}
-});
-
-store.on('program-delete', programData => {
-	const masterId = programData.masterId;
-
-	if (masterId) {
-		const masterData = store.master[masterId];
-
-		if (masterData) {
-			delete masterData.programs[programData.id];
-		}
 	}
 });

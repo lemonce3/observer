@@ -10,6 +10,7 @@ const app = new Koa();
 
 app.context.OBSERVER_HASH = Math.random().toString(16).substr(2, 8);
 app.context.dialog = {};
+
 app.use(bodyparser());
 app.use(router.routes());
 app.use(serve(path.resolve(config.static.path)));

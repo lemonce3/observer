@@ -2,7 +2,6 @@ const store = require('./store');
 
 exports.agent = require('./schemas/agent');
 exports.master = require('./schemas/master');
-exports.program = require('./schemas/program');
 exports.window = require('./schemas/window');
 
 exports.bind = function (masterId, agentId) {

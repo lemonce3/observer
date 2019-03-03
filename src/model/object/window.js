@@ -2,31 +2,20 @@ const db = require('../base');
 const _ = require('lodash');
 
 const localKeys = ['id', 'createdAt', 'visitedAt', 'meta', 'rect'];
-const programKeys = ['id', 'name', 'args', 'error', 'returnValue'];
+const programKeys = ['hash', 'name', 'args', 'error', 'returnValue', 'isExited'];
 const agentKeys = ['id', 'createdAt', 'visitedAt', 'masterId', 'modifier', 'pointer', 'ua'];
 
 module.exports = class Window {
 	constructor(data) {
 		this.data = data;
+		this.programWatcher = null;
 	}
 
 	get model() {
 		const local = _.pick(this.data, localKeys);
-		const programId = this.data.programId;
 
-		let program = null;
-
-		if (programId) {
-			const programData = db.program.get(programId);
-			
-			program = _.pick(programData, programKeys);
-			program.isExited = Boolean(programData.exitedAt);
-		}
-
-		const agent = _.pick(db.agent.get(this.data.agentId), agentKeys);
-
-		local.program = program;
-		local.agent = agent;
+		local.program = _.pick(this.data.program, programKeys);
+		local.agent = _.pick(db.agent.get(this.data.agentId), agentKeys);
 
 		return local;
 	}
@@ -54,13 +43,62 @@ module.exports = class Window {
 
 		return dialog.ticket;
 	}
+
+	callProgram(hash, name, args = [], timeout = 10000) {
+		if (!this.data.program.isExited) {
+			throw new Error('Window is busy with program.');
+		}
+
+		const program = this.data.program = {
+			hash,
+			name,
+			args,
+			
+			isExited: false,
+			returnValue: undefined,
+			error: null,
+	
+			timeout
+		};
+
+		this.programWatcher = setTimeout(() => {
+			program.isExited = true;
+			program.error = {
+				name: 'observer',
+				message: 'The program execution is timeout or no response.'
+			};
+		}, timeout);
+
+		return this;
+	}
+
+	exitProgram(error, returnValue) {
+		if (this.data.program.isExited) {
+			throw new Error('No program is invoking.');
+		}
+
+		clearTimeout(this.programWatcher);
+		this.programWatcher = null;
+
+		const program = this.data.program;
+
+		program.isExited = true;
+
+		if (error !== null) {
+			program.error = { name: 'agent', message: error };
+		} else {
+			program.returnValue = returnValue;
+		}
+
+		return this;
+	}
 	
 	update({ meta, rect }) {
 		Object.assign(this.data.meta, {
-			title: String(meta.title),
-			URL: String(meta.title),
-			referrer: String(meta.title),
-			domain: String(meta.title)
+			title: meta.title,
+			URL: meta.URL,
+			referrer: meta.referrer,
+			domain: meta.domain
 		});
 
 		Object.assign(this.data.rect, {

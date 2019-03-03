@@ -14,24 +14,22 @@ exports.addToAgent = function (agentId) {
 		agentId,
 		createdAt: now,
 		visitedAt: now,
-		programId: null,
-		meta: {
-			title: null,
-			URL: null,
-			referrer: null,
-			domain: null
+		program: {
+			hash: null,
+			name: null,
+			args: [],
+			
+			isExited: true,
+			returnValue: undefined,
+			error: null,
+	
+			timeout: null,
+			calledAt: null
 		},
-		rect: {
-			width: 0,
-			height: 0,
-			top: 0,
-			left: 0
-		},
-		dialog: {
-			alert: null,
-			confirm: null,
-			prompt: null
-		}
+		meta: { title: null, URL: null, referrer: null, domain: null },
+		rect: { width: 0, height: 0, top: 0, left: 0 }, //TODO screen
+		// docuement: { width: 0, height: 0, top: 0, left: 0 },
+		dialog: { alert: null, confirm: null, prompt: null }
 	};
 
 	agentData.windows.push(windowId);
@@ -54,14 +52,6 @@ function deleteWindow (id) {
 
 store.on('agent-delete', agentData => {
 	agentData.windows.forEach(windowId => deleteWindow(windowId));
-});
-
-store.on('program-delete', programData => {
-	const windowData = store.window[programData.windowId];
-
-	if (windowData) {
-		windowData.programId = null;
-	}
 });
 
 exports.del = deleteWindow;

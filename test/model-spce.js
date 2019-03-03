@@ -7,7 +7,6 @@ describe('object::', function () {
 	this.afterEach(function () {
 		$store.master = {};
 		$store.agent = {};
-		$store.program = {};
 		$store.window = {};
 	});
 
@@ -146,24 +145,19 @@ describe('object::', function () {
 					agentId: agentData.id,
 					createdAt: window.data.createdAt,
 					visitedAt: window.data.visitedAt,
-					programId: null,
-					meta: {
-						URL: null,
-						domain: null,
-						referrer: null,
-						title: null,
+					program: {
+						hash: null,
+						name: null,
+						args: [],
+						calledAt: null,
+						error: null,
+						isExited: true,
+						returnValue: undefined,
+						timeout: null
 					},
-					rect: {
-						width: 0,
-						height: 0,
-						top: 0,
-						left: 0
-					},
-					dialog: {
-						alert: null,
-						confirm: null,
-						prompt: null
-					}
+					meta: { URL: null, domain: null, referrer: null, title: null },
+					rect: { width: 0, height: 0, top: 0, left: 0 },
+					dialog: { alert: null, confirm: null, prompt: null }
 				});
 			});
 		});
@@ -194,18 +188,8 @@ describe('object::', function () {
 				const testString = 'test';
 	
 				window.update({
-					meta: {
-						title: testString,
-						URL: testString,
-						referrer: testString,
-						domain: testString
-					},
-					rect: {
-						width: 1,
-						height: 1,
-						top: 1,
-						left: 1
-					}
+					meta: { title: testString, URL: testString, referrer: testString, domain: testString },
+					rect: { width: 1, height: 1, top: 1, left: 1 }
 				});
 	
 				assert.deepStrictEqual($store.window[windowId], {
@@ -213,7 +197,16 @@ describe('object::', function () {
 					agentId: agent.data.id,
 					createdAt: window.data.createdAt,
 					visitedAt: window.data.createdAt,
-					programId: null,
+					program: {
+						hash: null,
+						name: null,
+						args: [],
+						calledAt: null,
+						error: null,
+						isExited: true,
+						returnValue: undefined,
+						timeout: null
+					},
 					meta: {
 						URL: testString,
 						domain: testString,
@@ -306,44 +299,144 @@ describe('object::', function () {
 			});
 		});
 
+		describe('#callProgram', function () {
+			it('call a new program on the last has been exited.', function () {
+				const agent = Agent.create();
+				const window = Window.create(agent.data.id);
+				
+				window.callProgram('1234', 'program.test', []);
+
+				assert.deepEqual(window.data.program, {
+					hash: '1234',
+					name: 'program.test',
+					args: [],
+					isExited: false,
+					error: null,
+					returnValue: undefined,
+					timeout: 10000
+				});
+			});
+
+			it('should throw error if the last has NOT been exited.', function () {
+				assert.throws(() => {
+					const agent = Agent.create();
+					const window = Window.create(agent.data.id);
+					
+					window.callProgram('1234', 'program.test', []);
+					window.callProgram('abcd', 'program.busy', []);
+				}, {
+					message: 'Window is busy with program.'
+				});
+			});
+
+			it('should timeout if no exit in 1 sec.', function (done) {
+				const agent = Agent.create();
+				const window = Window.create(agent.data.id);
+
+				window.callProgram('1234', 'program.test', [], 1000);
+
+				setTimeout(() => {
+					assert.deepEqual(window.data.program, {
+						hash: '1234',
+						name: 'program.test',
+						args: [],
+						isExited: true,
+						error: {
+							name: 'observer',
+							message: 'The program execution is timeout or no response.'
+						},
+						returnValue: undefined,
+						timeout: 1000
+					});
+
+					done();
+				}, 1500);
+			});
+		});
+
+		describe('#exitProgram', function () {
+			it('should exit with a returnValue.', function () {
+				const agent = Agent.create();
+				const window = Window.create(agent.data.id);
+				
+				window.callProgram('1234', 'program.test', []);
+				window.exitProgram(null, 'anything');
+
+				assert.strictEqual(window.programWatcher, null);
+				assert.deepEqual(window.data.program, {
+					hash: '1234',
+					name: 'program.test',
+					args: [],
+					isExited: true,
+					error: null,
+					returnValue: 'anything',
+					timeout: 10000
+				});
+			});
+
+			it('should exit with a error.', function () {
+				const agent = Agent.create();
+				const window = Window.create(agent.data.id);
+				
+				window.callProgram('1234', 'program.test', []);
+				window.exitProgram('something wrong');
+
+				assert.deepEqual(window.data.program, {
+					hash: '1234',
+					name: 'program.test',
+					args: [],
+					isExited: true,
+					error: {
+						name: 'agent',
+						message: 'something wrong'
+					},
+					returnValue: undefined,
+					timeout: 10000
+				});
+			});
+
+			it('should NOT exit if no program running.', function () {
+				const agent = Agent.create();
+				const window = Window.create(agent.data.id);
+				
+				window.callProgram('1234', 'program.test', []);
+				window.exitProgram('something wrong');
+				
+				assert.throws(() => {
+					window.exitProgram('something wrong');
+				}, {
+					message: 'No program is invoking.'
+				});
+			});
+		});
+
 		describe('#model', function () {
 			it('Without program.', function () {
 				const agent = Agent.create();
 				const window = Window.create(agent.data.id);
 
-				assert.deepEqual(window.model, {
+				assert.deepStrictEqual(window.model, {
 					id: window.data.id,
 					createdAt: window.data.createdAt,
 					visitedAt: window.data.visitedAt,
-					meta: {
-						title: null,
-						URL: null,
-						domain: null,
-						referrer: null
+					meta: { title: null, URL: null, domain: null, referrer: null },
+					rect: { width: 0, height: 0, top: 0, left: 0 },
+					program: {
+						hash: null,
+						name: null,
+						args: [],
+						error: null,
+						returnValue: undefined,
+						isExited: true
 					},
-					rect: {
-						width: 0,
-						height: 0,
-						top: 0,
-						left: 0
-					},
-					program: null,
 					agent: {
 						id: agent.data.id,
 						ua: null,
 						createdAt: agent.data.createdAt,
 						visitedAt: agent.data.visitedAt,
 						masterId: null,
-						modifier: {
-							ctrl: false,
-							shift: false,
-							alt: false,
-							meta: false
-						},
-						pointer: {
-							x: 0,
-							y: 0
-						}
+						modifier: { ctrl: false, shift: false, alt: false, meta: false },
+						pointer: { x: 0, y: 0 }
 					}
 				});
 			});
@@ -354,32 +447,16 @@ describe('object::', function () {
 				const window = Window.create(agent.data.id);
 
 				master.bind(agent.data.id);
+				window.callProgram('1234', 'program.test');
 
-				const program = Program.create({
-					windowId: window.data.id,
-					masterId: master.data.id,
-					name: 'program.test',
-					args: []
-				});
-
-				assert.deepEqual(window.model, {
+				assert.deepStrictEqual(window.model, {
 					id: window.data.id,
 					createdAt: window.data.createdAt,
 					visitedAt: window.data.visitedAt,
-					meta: {
-						title: null,
-						URL: null,
-						domain: null,
-						referrer: null
-					},
-					rect: {
-						width: 0,
-						height: 0,
-						top: 0,
-						left: 0
-					},
+					meta: { title: null, URL: null, domain: null, referrer: null },
+					rect: { width: 0, height: 0, top: 0, left: 0 },
 					program: {
-						id: program.data.id,
+						hash: '1234',
 						name: 'program.test',
 						args: [],
 						error: null,
@@ -392,16 +469,8 @@ describe('object::', function () {
 						createdAt: agent.data.createdAt,
 						visitedAt: agent.data.visitedAt,
 						masterId: master.data.id,
-						modifier: {
-							ctrl: false,
-							shift: false,
-							alt: false,
-							meta: false
-						},
-						pointer: {
-							x: 0,
-							y: 0
-						}
+						modifier: { ctrl: false, shift: false, alt: false, meta: false },
+						pointer: { x: 0, y: 0 }
 					}
 				});
 			});
@@ -422,7 +491,6 @@ describe('object::', function () {
 					createdAt: masterData.createdAt,
 					visitedAt: masterData.visitedAt,
 					agents: {},
-					programs: {},
 					log: []
 				});
 			});
@@ -506,29 +574,13 @@ describe('object::', function () {
 
 				master.bind(agent1.data.id);
 				master.bind(agent2.data.id);
+				window.callProgram('1234', 'program.test');
+				window.openDialog('confirm', 'countinue?', '1234abcd');
 
-				const program = Program.create({
-					windowId: window.data.id,
-					masterId: master.data.id,
-					name: 'program.test',
-					args: []
-				});
-
-				assert.deepEqual(master.model, {
+				assert.deepStrictEqual(master.model, {
 					id: master.data.id,
 					createdAt: master.data.createdAt,
 					visitedAt: master.data.visitedAt,
-					programs: {
-						[program.data.id]: {
-							id: program.data.id,
-							name: 'program.test',
-							args: [],
-							error: null,
-							returnValue: undefined,
-							exitedAt: null,
-							windowId: window.data.id
-						}
-					},
 					agents: {
 						[agent1.data.id]: {
 							id: agent1.data.id,
@@ -541,9 +593,24 @@ describe('object::', function () {
 									id: window.data.id,
 									createdAt: window.data.createdAt,
 									visitedAt: window.data.visitedAt,
+									program: {
+										hash: '1234',
+										name: 'program.test',
+										args: [],
+										error: null,
+										returnValue: undefined,
+										isExited: false
+									},
 									meta: { URL: null, domain: null, referrer: null, title: null },
 									rect: { height: 0, width: 0, top: 0, left: 0 },
-									dialog: { alert: null, confirm: null, prompt: null }
+									dialog: {
+										alert: null,
+										confirm: {
+											message: 'countinue?',
+											ticket: '1234abcd'
+										},
+										prompt: null
+									}
 								}
 							]
 						},
@@ -556,118 +623,6 @@ describe('object::', function () {
 							windows: []
 						}
 					}
-				});
-			});
-		});
-	});
-
-	describe('Program', function () {
-		describe('create()', function () {
-
-			it('should be created', function () {
-				const master = Master.create();
-				const agent = Agent.create();
-				const window = Window.create(agent.data.id);
-
-				master.bind(agent.data.id);
-
-				const program = Program.create({
-					windowId: window.data.id,
-					masterId: master.data.id,
-					name: 'program.test',
-					args: []
-				});
-
-				assert.strictEqual(program.data.windowId, window.data.id);
-				assert.strictEqual(program.data.masterId, master.data.id);
-				assert.strictEqual(master.data.programs[program.data.id], true);
-				assert.strictEqual(window.data.programId, program.data.id);
-			});
-
-		});
-
-		describe('select()', function () {
-			it('should be selected by id', function () {
-				const master = Master.create();
-				const agent = Agent.create();
-				const window = Window.create(agent.data.id);
-
-				master.bind(agent.data.id);
-
-				const program = Program.create({
-					windowId: window.data.id,
-					masterId: master.data.id,
-					name: 'program.test',
-					args: []
-				});
-
-				const queriedProgram = Program.select(program.data.id);
-
-				assert.strictEqual(program.data, queriedProgram.data);
-				assert.notEqual(program, queriedProgram);
-			});
-		});
-
-		describe('#destroy()', function () {
-			it('can destroy', function () {
-				const master = Master.create();
-				const agent = Agent.create();
-				const window = Window.create(agent.data.id);
-
-				master.bind(agent.data.id);
-
-				const program = Program.create({
-					windowId: window.data.id,
-					masterId: master.data.id,
-					name: 'program.test',
-					args: []
-				});
-				
-				program.destroy();
-
-				assert.strictEqual($store.program[program.data.id], undefined);
-			});
-		});
-
-		describe('#exit()', function() {
-			let program;
-
-			this.beforeEach(function () {
-				const master = Master.create();
-				const agent = Agent.create();
-				const window = Window.create(agent.data.id);
-
-				master.bind(agent.data.id);
-
-				program = Program.create({
-					windowId: window.data.id,
-					masterId: master.data.id,
-					name: 'program.test',
-					args: []
-				});
-			});
-
-			it('can exit with error', function () {
-				assert.strictEqual(program.data.exitedAt, null);
-
-				program.exit('Testing error message');
-
-				assert.notEqual(program.data.exitedAt, null);
-				assert.deepEqual(program.data.error, {
-					name: 'agent',
-					message: 'Testing error message'
-				});
-			});
-
-			it('can exit without error', function () {
-				assert.strictEqual(program.data.exitedAt, null);
-
-				program.exit('Testing error message');
-
-				assert.notEqual(program.data.exitedAt, null);
-				assert.deepEqual(program.data.error, {
-					name: 'agent',
-					message: 'Testing error message'
 				});
 			});
 		});
