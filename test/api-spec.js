@@ -72,8 +72,6 @@ describe('Api::', function () {
 			assert.deepStrictEqual(response.data.agents, {});
 
 			assert(_.isNumber(response.data.id));
-			assert(_.isNumber(response.data.createdAt));
-			assert(_.isNumber(response.data.visitedAt));
 			assert.notStrictEqual($store.master[response.data.id], undefined);
 		});
 
@@ -143,20 +141,15 @@ describe('Api::', function () {
 
 			assert.deepEqual(response.data, {
 				id: masterData.id,
-				createdAt: masterData.createdAt,
-				visitedAt: response.data.visitedAt,
 				agents: {
 					[agent.data.id]: {
+						ua: null,
 						id: agent.data.id,
-						createdAt: agent.data.createdAt,
-						visitedAt: agent.data.visitedAt,
 						modifier: { ctrl: true, shift: true, alt: true, meta: true },
 						pointer: { x: 2, y: 2 },
 						windows: [
 							{
 								id: window.data.id,
-								createdAt: window.data.createdAt,
-								visitedAt: window.data.visitedAt,
 								meta: { title: null, URL: null, referrer: null, domain: null },
 								rect: { width: 0, height: 0, top: 0, left: 0 },
 								dialog: { alert: null, confirm: null, prompt: null },
@@ -192,20 +185,15 @@ describe('Api::', function () {
 
 			assert.deepEqual(response.data, {
 				id: masterData.id,
-				createdAt: masterData.createdAt,
-				visitedAt: response.data.visitedAt,
 				agents: {
 					[agent.data.id]: {
 						id: agent.data.id,
-						createdAt: agent.data.createdAt,
-						visitedAt: agent.data.visitedAt,
+						ua: null,
 						modifier: { ctrl: false, shift: false, alt: false, meta: false },
 						pointer: { x: 0, y: 0 },
 						windows: [
 							{
 								id: window.data.id,
-								createdAt: window.data.createdAt,
-								visitedAt: window.data.visitedAt,
 								meta: { title: null, URL: null, referrer: null, domain: null },
 								rect: { width: 0, height: 0, top: 0, left: 0 },
 								dialog: { alert: null, confirm: null, prompt: null },
@@ -236,20 +224,15 @@ describe('Api::', function () {
 			
 			assert.deepEqual(masterData, {
 				id: masterData.id,
-				createdAt: masterData.createdAt,
-				visitedAt: masterData.visitedAt,
 				agents: {
 					[agent.data.id]: {
 						id: agent.data.id,
-						createdAt: agent.data.createdAt,
-						visitedAt: agent.data.visitedAt,
+						ua: null,
 						modifier: { ctrl: false, shift: false, alt: false, meta: false },
 						pointer: { x: 0, y: 0 },
 						windows: [
 							{
 								id: window.data.id,
-								createdAt: window.data.createdAt,
-								visitedAt: window.data.visitedAt,
 								meta: { title: null, URL: null, referrer: null, domain: null },
 								rect: { width: 0, height: 0, top: 0, left: 0 },
 								dialog: {
@@ -295,8 +278,6 @@ describe('Api::', function () {
 			assert.deepStrictEqual(response.data.agents, {});
 
 			assert(_.isNumber(response.data.id));
-			assert(_.isNumber(response.data.createdAt));
-			assert(_.isNumber(response.data.visitedAt));
 			assert.strictEqual($store.master[response.data.id], undefined);
 		});
 
@@ -345,16 +326,11 @@ describe('Api::', function () {
 
 			assert.deepEqual(response.data, {
 				id: windowData.id,
-				createdAt: windowData.createdAt,
-				visitedAt: response.data.visitedAt,
 				agent: {
 					id: agent.data.id,
-					createdAt: agent.data.createdAt,
-					visitedAt: agent.data.visitedAt,
 					masterId: null,
 					modifier: { ctrl: false, shift: false, alt: false, meta: false },
 					pointer: { x: 0, y: 0 },
-					ua: null,
 				},
 				meta: { title: 'title', URL: 'URL', referrer: 'referrer', domain: 'domain' },
 				program: {
@@ -385,16 +361,11 @@ describe('Api::', function () {
 			
 			assert.deepEqual(response.data, {
 				id: windowData.id,
-				createdAt: windowData.createdAt,
-				visitedAt: response.data.visitedAt,
 				agent: {
 					id: agent.data.id,
-					createdAt: agent.data.createdAt,
-					visitedAt: agent.data.visitedAt,
 					masterId: null,
 					modifier: { ctrl: false, shift: false, alt: false, meta: false },
 					pointer: { x: 0, y: 0 },
-					ua: null,
 				},
 				meta: { title: null, URL: null, referrer: null, domain: null },
 				program: {

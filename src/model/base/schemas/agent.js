@@ -8,9 +8,9 @@ exports.add = function (ua = null) {
 
 	return store.agent[id] = {
 		id,
-		ua,
 		createdAt: now,
 		visitedAt: now,
+		ua,
 		masterId: null,
 		modifier: {
 			ctrl: false,

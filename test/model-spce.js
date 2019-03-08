@@ -1,6 +1,6 @@
 const assert = require('assert');
 const $store = require('../src/model/base/store');
-const { Agent, Master, Window, Program } = require('../src/model');
+const { Agent, Master, Window } = require('../src/model');
 
 describe('object::', function () {
 
@@ -417,8 +417,6 @@ describe('object::', function () {
 
 				assert.deepStrictEqual(window.model, {
 					id: window.data.id,
-					createdAt: window.data.createdAt,
-					visitedAt: window.data.visitedAt,
 					meta: { title: null, URL: null, domain: null, referrer: null },
 					rect: { width: 0, height: 0, top: 0, left: 0 },
 					program: {
@@ -431,9 +429,6 @@ describe('object::', function () {
 					},
 					agent: {
 						id: agent.data.id,
-						ua: null,
-						createdAt: agent.data.createdAt,
-						visitedAt: agent.data.visitedAt,
 						masterId: null,
 						modifier: { ctrl: false, shift: false, alt: false, meta: false },
 						pointer: { x: 0, y: 0 }
@@ -451,8 +446,6 @@ describe('object::', function () {
 
 				assert.deepStrictEqual(window.model, {
 					id: window.data.id,
-					createdAt: window.data.createdAt,
-					visitedAt: window.data.visitedAt,
 					meta: { title: null, URL: null, domain: null, referrer: null },
 					rect: { width: 0, height: 0, top: 0, left: 0 },
 					program: {
@@ -465,9 +458,6 @@ describe('object::', function () {
 					},
 					agent: {
 						id: agent.data.id,
-						ua: null,
-						createdAt: agent.data.createdAt,
-						visitedAt: agent.data.visitedAt,
 						masterId: master.data.id,
 						modifier: { ctrl: false, shift: false, alt: false, meta: false },
 						pointer: { x: 0, y: 0 }
@@ -579,20 +569,15 @@ describe('object::', function () {
 
 				assert.deepStrictEqual(master.model, {
 					id: master.data.id,
-					createdAt: master.data.createdAt,
-					visitedAt: master.data.visitedAt,
 					agents: {
 						[agent1.data.id]: {
 							id: agent1.data.id,
-							createdAt: agent1.data.createdAt,
-							visitedAt: agent1.data.visitedAt,
+							ua: null,
 							modifier: { alt: false, ctrl: false, meta: false, shift: false },
 							pointer: { x: 0, y: 0 },
 							windows: [
 								{
 									id: window.data.id,
-									createdAt: window.data.createdAt,
-									visitedAt: window.data.visitedAt,
 									program: {
 										hash: '1234',
 										name: 'program.test',
@@ -616,8 +601,7 @@ describe('object::', function () {
 						},
 						[agent2.data.id]: {
 							id: agent2.data.id,
-							createdAt: agent2.data.createdAt,
-							visitedAt: agent2.data.visitedAt,
+							ua: null,
 							modifier: { alt: false, ctrl: false, meta: false, shift: false },
 							pointer: { x: 0, y: 0 },
 							windows: []

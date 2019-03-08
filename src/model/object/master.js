@@ -1,10 +1,10 @@
 const db = require('../base');
 const _ = require('lodash');
 
-const localKeys = ['id', 'createdAt', 'visitedAt', 'agents', 'programs'];
-const agentKeys = ['id', 'createdAt', 'visitedAt', 'modifier', 'pointer'];
+const localKeys = ['id', 'agents', 'programs'];
+const agentKeys = ['id', 'modifier', 'pointer', 'ua'];
 const programKeys = ['hash', 'name', 'args', 'error', 'returnValue', 'isExited'];
-const windowKeys = ['id', 'createdAt', 'visitedAt', 'meta', 'rect', 'dialog', 'program'];
+const windowKeys = ['id', 'meta', 'rect', 'dialog', 'program'];
 
 module.exports = class Master {
 	constructor(data) {

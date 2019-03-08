@@ -28,6 +28,11 @@
   },
   "devDependencies": {
     "axios": "^0.18.0",
-    "mocha": "^6.0.0"
-  }
+    "mocha": "^6.0.2"
+  },
+  "files": [
+    "/index.js",
+    "/src",
+    "/config.example.json"
+  ]
 }

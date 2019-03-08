@@ -12,12 +12,14 @@ router.get('/agent.html', ctx => {
 	let agent = null;
 	
 	if (!agentId || !(agent = Agent.selectById(agentId))) {
-		agent = Agent.create();
+		agent = Agent.create(ctx.request.header['User-Agent']);
 		ctx.cookies.set(COOKIE_KEY, agent.data.id, { httpOnly: false, maxAge: 0 });
 	}
 
 	ctx.response.type = 'text/html; charset=utf-8';
-	ctx.body = agentHTML.replace('__REPLACEMENT__', JSON.stringify(agent.data.id));
+	ctx.body = agentHTML.replace('__REPLACEMENT__', JSON.stringify({
+		agentId: agent.data.id
+	}));
 });
 
 router.get('/agent', ctx => {

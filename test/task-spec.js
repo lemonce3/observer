@@ -3,6 +3,12 @@ const db = require('../src/model/base');
 const $store = require('../src/model/base/store');
 
 describe('task::', function () {
+	this.beforeAll(function () {
+		$store.master = {};
+		$store.agent = {};
+		$store.window = {};
+	});
+
 	it('should destroy master when overtime', function (done) {
 		const masterData = db.master.add();
 
