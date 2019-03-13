@@ -11,6 +11,7 @@ describe('database::', function () {
 		$store.master = {};
 		$store.agent = {};
 		$store.window = {};
+		$store.program = {};
 	});
 
 	it('should create a master correctly.', function () {
@@ -121,5 +122,53 @@ describe('database::', function () {
 		assert.strictEqual(deleted, agentData);
 		assert.strictEqual($store.window[windowData.id], undefined);
 		assert.strictEqual($store.agent[agentData.id], undefined);
+	});
+
+	it('should create a program correctly', function () {
+		const masterData = db.master.add();
+		const agentData = db.agent.add();
+		
+		db.bind(masterData.id, agentData.id);
+
+		const windowData = db.window.addToAgent(agentData.id, WindowId());
+
+		assert.strictEqual(windowData.program, null);
+
+		const programData = db.program.add({
+			hash: '1234',
+			name: 'program.test',
+			args: [],
+			windowId: windowData.id,
+			masterId: masterData.id
+		});
+
+		assert.strictEqual($store.program[programData.hash], programData);
+		assert.deepEqual(masterData.programs, ['1234']);
+		assert.strictEqual(windowData.program, '1234');
+	});
+
+	it('should delete a program correctly', function () {
+		const masterData = db.master.add();
+		const agentData = db.agent.add();
+		
+		db.bind(masterData.id, agentData.id);
+		
+		const windowData = db.window.addToAgent(agentData.id, WindowId());
+
+		assert.strictEqual(windowData.program, null);
+
+		const programData = db.program.add({
+			hash: '1234',
+			name: 'program.test',
+			args: [],
+			windowId: windowData.id,
+			masterId: masterData.id
+		});
+
+		assert.strictEqual($store.program[programData.hash], programData);
+
+		db.program.del(programData.hash);
+		
+		assert.strictEqual($store.program[programData.hash], undefined);
 	});
 });

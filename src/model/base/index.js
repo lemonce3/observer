@@ -3,6 +3,7 @@ const store = require('./store');
 exports.agent = require('./schemas/agent');
 exports.master = require('./schemas/master');
 exports.window = require('./schemas/window');
+exports.program = require('./schemas/program');
 
 exports.bind = function (masterId, agentId) {
 	const masterData = store.master[masterId];

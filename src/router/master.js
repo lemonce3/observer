@@ -63,12 +63,20 @@ router.put('/master/:masterId', ctx => {
 			/**
 			 * Call program
 			 */
-			const { hash, name, args, timeout = 10000 } = windowBody.program;
+			const newProgram = Object.values(body.programs).find(programBody => programBody.windowId === windowBody.id);
 
-			if (hash !== window.data.program.hash) {
-				window.callProgram(hash, name, args, timeout );
+			if (windowBody.program === null && newProgram) {
+				const { hash, name, args, timeout } = newProgram;
+
+				window.callProgram(hash, name, args, timeout);
 			}
 		});
+	});
+
+	master.data.programs.forEach(hash => {
+		if (!body.programs[hash]) {
+			master.deleteProgram(hash);
+		}
 	});
 
 	ctx.body = master.model;

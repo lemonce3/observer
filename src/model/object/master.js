@@ -3,7 +3,7 @@ const _ = require('lodash');
 
 const localKeys = ['id', 'agents', 'programs'];
 const agentKeys = ['id', 'modifier', 'pointer', 'ua'];
-const programKeys = ['hash', 'name', 'args', 'error', 'returnValue', 'isExited'];
+const programKeys = ['hash', 'name', 'args', 'error', 'returnValue', 'windowId'];
 const windowKeys = ['id', 'meta', 'rect', 'dialog', 'program'];
 
 module.exports = class Master {
@@ -14,19 +14,23 @@ module.exports = class Master {
 	get model() {
 		const local = Object.assign(_.pick(this.data, localKeys), {
 			agents: {},
+			programs: {}
 		});
 
 		Object.keys(this.data.agents).forEach(agentId => {
 			const agentData = db.agent.get(agentId);
 			const agent = local.agents[agentId] = _.pick(agentData, agentKeys);
 
-			agent.windows = agentData.windows.map(windowId => {
-				const window = _.pick(db.window.get(windowId), windowKeys);
+			agent.windows = agentData.windows.map(windowId => _.pick(db.window.get(windowId), windowKeys));
+		});
 
-				window.program = _.pick(window.program, programKeys);
+		this.data.programs.forEach(hash => {
+			const programData = db.program.get(hash);
+			const model = _.pick(programData, programKeys);
 
-				return window;
-			});
+			model.isExited = programData.exitedAt !== null;
+
+			local.programs[hash] = model;
 		});
 
 		return local;
@@ -48,6 +52,11 @@ module.exports = class Master {
 		db.unbind(this.data.id, name);
 
 		return this;
+	}
+
+	deleteProgram(hash) {
+		_.pull(this.data.programs, hash);
+		db.program.del(hash);
 	}
 
 	destroy() {

@@ -2,19 +2,19 @@ const db = require('../base');
 const _ = require('lodash');
 
 const localKeys = ['id', 'meta', 'rect'];
-const programKeys = ['hash', 'name', 'args', 'error', 'returnValue', 'isExited'];
+const programKeys = ['hash', 'name', 'args', 'error', 'returnValue'];
 const agentKeys = ['id', 'masterId', 'modifier', 'pointer'];
 
 module.exports = class Window {
 	constructor(data) {
 		this.data = data;
-		this.programWatcher = null;
 	}
 
 	get model() {
 		const local = _.pick(this.data, localKeys);
+		const programHash = this.data.program;
 
-		local.program = _.pick(this.data.program, programKeys);
+		local.program = programHash && _.pick(db.program.get(programHash), programKeys);
 		local.agent = _.pick(db.agent.get(this.data.agentId), agentKeys);
 
 		return local;
@@ -45,25 +45,22 @@ module.exports = class Window {
 	}
 
 	callProgram(hash, name, args = [], timeout = 10000) {
-		if (!this.data.program.isExited) {
+		if (this.data.program) {
 			throw new Error('Window is busy with program.');
 		}
 
-		const program = this.data.program = {
-			hash,
-			name,
-			args,
-			
-			isExited: false,
-			returnValue: undefined,
-			error: null,
-	
-			timeout
-		};
+		const programData = db.program.add({
+			hash, name, args,
+			windowId: this.data.id,
+			masterId: db.agent.get(this.data.agentId).masterId
+		});
+
+		this.data.program = hash;
 
 		this.programWatcher = setTimeout(() => {
-			program.isExited = true;
-			program.error = {
+			this.data.program = null;
+			programData.exitedAt = Date.now();
+			programData.error = {
 				name: 'observer',
 				message: 'The program execution is timeout or no response.'
 			};
@@ -73,22 +70,24 @@ module.exports = class Window {
 	}
 
 	exitProgram(error, returnValue) {
-		if (this.data.program.isExited) {
+		if (!this.data.program) {
 			throw new Error('No program is invoking.');
 		}
 
 		clearTimeout(this.programWatcher);
 		this.programWatcher = null;
 
-		const program = this.data.program;
+		const programData = db.program.get(this.data.program);
 
-		program.isExited = true;
+		programData.exitedAt = Date.now();
 
 		if (error !== null) {
-			program.error = { name: 'agent', message: error };
+			programData.error = { name: 'agent', message: error };
 		} else {
-			program.returnValue = returnValue;
+			programData.returnValue = returnValue;
 		}
+
+		this.data.program = null;
 
 		return this;
 	}

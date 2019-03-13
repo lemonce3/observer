@@ -16,6 +16,7 @@ describe('Api::', function () {
 		$store.master = {};
 		$store.agent = {};
 		$store.window = {};
+		$store.program = {};
 	});
 
 	describe('GET /api/agent.html', function () {
@@ -141,6 +142,7 @@ describe('Api::', function () {
 
 			assert.deepEqual(response.data, {
 				id: masterData.id,
+				programs: {},
 				agents: {
 					[agent.data.id]: {
 						ua: null,
@@ -153,14 +155,7 @@ describe('Api::', function () {
 								meta: { title: null, URL: null, referrer: null, domain: null },
 								rect: { width: 0, height: 0, top: 0, left: 0 },
 								dialog: { alert: null, confirm: null, prompt: null },
-								program: {
-									hash: null,
-									name: null,
-									args: [],
-									error: null,
-									// returnValue: undefined,
-									isExited: true
-								}
+								program: null
 							}
 						]
 					}
@@ -175,16 +170,27 @@ describe('Api::', function () {
 				agents: [agent.data.id]
 			});
 
-			Object.assign(masterData.agents[agent.data.id].windows[0].program, {
+			masterData.programs['1234abcd'] = {
 				hash: '1234abcd',
 				name: 'program.test',
-				args: []
-			});
+				args: [],
+				windowId: window.data.id
+			};
 
 			const response = await httpAgent.put(`/api/master/${masterData.id}`, masterData);
 
 			assert.deepEqual(response.data, {
 				id: masterData.id,
+				programs: {
+					'1234abcd': {
+						args: [],
+						error: null,
+						hash: '1234abcd',
+						isExited: false,
+						name: 'program.test',
+						windowId: window.data.id
+					}
+				},
 				agents: {
 					[agent.data.id]: {
 						id: agent.data.id,
@@ -197,19 +203,96 @@ describe('Api::', function () {
 								meta: { title: null, URL: null, referrer: null, domain: null },
 								rect: { width: 0, height: 0, top: 0, left: 0 },
 								dialog: { alert: null, confirm: null, prompt: null },
-								program: {
-									hash: '1234abcd',
-									name: 'program.test',
-									args: [],
-									error: null,
-									// returnValue: undefined,
-									isExited: false
-								}
+								program: '1234abcd'
 							}
 						]
 					}
 				}
 			});
+		});
+
+		it('delete program', async function () {
+			const agent = Agent.create();
+			const window = Window.create(agent.data.id);
+			const { data: masterData0 } = await httpAgent.post('/api/master', {
+				agents: [agent.data.id]
+			});
+
+			masterData0.programs['1234abcd'] = {
+				hash: '1234abcd',
+				name: 'program.test',
+				args: [],
+				windowId: window.data.id
+			};
+
+			const { data: masterData1 } = await httpAgent.put(`/api/master/${masterData0.id}`, masterData0);
+			
+			window.exitProgram('something wrong');
+
+			const { data: masterData2 } = await httpAgent.put(`/api/master/${masterData1.id}`, masterData1);
+
+			assert.deepEqual(masterData2, {
+				id: masterData0.id,
+				programs: {
+					'1234abcd': {
+						args: [],
+						error: {
+							message: 'something wrong',
+							name: 'agent'
+						},
+						hash: '1234abcd',
+						isExited: true,
+						name: 'program.test',
+						windowId: window.data.id
+					}
+				},
+				agents: {
+					[agent.data.id]: {
+						id: agent.data.id,
+						ua: null,
+						modifier: { ctrl: false, shift: false, alt: false, meta: false },
+						pointer: { x: 0, y: 0 },
+						windows: [
+							{
+								id: window.data.id,
+								meta: { title: null, URL: null, referrer: null, domain: null },
+								rect: { width: 0, height: 0, top: 0, left: 0 },
+								dialog: { alert: null, confirm: null, prompt: null },
+								program: null
+							}
+						]
+					}
+				}
+			});
+
+			assert.notStrictEqual($store.program['1234abcd'], undefined);
+			delete masterData2.programs['1234abcd'];
+
+			const { data: masterData3 } = await httpAgent.put(`/api/master/${masterData2.id}`, masterData2);
+
+			assert.deepEqual(masterData3, {
+				id: masterData0.id,
+				programs: {},
+				agents: {
+					[agent.data.id]: {
+						id: agent.data.id,
+						ua: null,
+						modifier: { ctrl: false, shift: false, alt: false, meta: false },
+						pointer: { x: 0, y: 0 },
+						windows: [
+							{
+								id: window.data.id,
+								meta: { title: null, URL: null, referrer: null, domain: null },
+								rect: { width: 0, height: 0, top: 0, left: 0 },
+								dialog: { alert: null, confirm: null, prompt: null },
+								program: null
+							}
+						]
+					}
+				}
+			});
+
+			assert.strictEqual($store.program['1234abcd'], undefined);
 		});
 
 		it('resolve a dialog', async function () {
@@ -224,6 +307,7 @@ describe('Api::', function () {
 			
 			assert.deepEqual(masterData, {
 				id: masterData.id,
+				programs: {},
 				agents: {
 					[agent.data.id]: {
 						id: agent.data.id,
@@ -243,14 +327,7 @@ describe('Api::', function () {
 										ticket: '1234abcd'
 									}
 								},
-								program: {
-									hash: null,
-									name: null,
-									args: [],
-									error: null,
-									// returnValue: undefined,
-									isExited: true
-								}
+								program: null
 							}
 						]
 					}
@@ -333,22 +410,49 @@ describe('Api::', function () {
 					pointer: { x: 0, y: 0 },
 				},
 				meta: { title: 'title', URL: 'URL', referrer: 'referrer', domain: 'domain' },
-				program: {
-					hash: null,
-					name: null,
-					args: [],
-					error: null,
-					// returnValue: undefined,
-					isExited: true
-				},
+				program: null,
 				rect: { top: 3, left: 3, width: 3, height: 3 }
 			});
+		});
+
+		it('could read a program after master calling program.', async function () {
+			const agent = Agent.create();
+			const { data: windowModel } = await httpAgent.post('/api/window', { agentId: agent.data.id });
+			const window = Window.select(windowModel.id);
+			
+			const { data: masterModel } = await httpAgent.post('/api/master', { agents: [agent.data.id] });
+			
+			window.callProgram('1234abcd', 'program.test', [1], 2000);
+
+			const response = await httpAgent.put(`/api/window/${windowModel.id}`, windowModel);
+			
+			assert.deepEqual(response.data, {
+				id: windowModel.id,
+				agent: {
+					id: agent.data.id,
+					masterId: masterModel.id,
+					modifier: { ctrl: false, shift: false, alt: false, meta: false },
+					pointer: { x: 0, y: 0 },
+				},
+				meta: { title: null, URL: null, referrer: null, domain: null },
+				program: {
+					args: [1],
+					error: null,
+					hash: '1234abcd',
+					name: 'program.test',
+					// returnValue: undefined
+				},
+				rect: { top: 0, left: 0, width: 0, height: 0 }
+			});
+
 		});
 
 		it('exit a program with returnValue', async function () {
 			const agent = Agent.create();
 			const { data: windowData } = await httpAgent.post('/api/window', { agentId: agent.data.id });
 			const window = Window.select(windowData.id);
+			
+			const { data: masterModel } = await httpAgent.post('/api/master', { agents: [agent.data.id] });
 			
 			window.callProgram('1234abcd', 'program.test', [1], 2000);
 
@@ -363,20 +467,27 @@ describe('Api::', function () {
 				id: windowData.id,
 				agent: {
 					id: agent.data.id,
-					masterId: null,
+					masterId: masterModel.id,
 					modifier: { ctrl: false, shift: false, alt: false, meta: false },
 					pointer: { x: 0, y: 0 },
 				},
 				meta: { title: null, URL: null, referrer: null, domain: null },
-				program: {
-					hash: '1234abcd',
-					name: 'program.test',
-					args: [1],
-					error: null,
-					returnValue: 2,
-					isExited: true
-				},
+				program: null,
 				rect: { top: 0, left: 0, width: 0, height: 0 }
+			});
+
+			const programData = $store.program['1234abcd'];
+
+			assert.deepEqual(programData, {
+				hash: '1234abcd',
+				name: 'program.test',
+				args: [1],
+				calledAt: programData.calledAt,
+				exitedAt: programData.exitedAt,
+				error: null,
+				masterId: masterModel.id,
+				windowId: window.data.id,
+				returnValue: 2
 			});
 		});
 	});

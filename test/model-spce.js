@@ -8,6 +8,7 @@ describe('object::', function () {
 		$store.master = {};
 		$store.agent = {};
 		$store.window = {};
+		$store.program = {};
 	});
 
 	describe('Agent', function () {
@@ -145,16 +146,7 @@ describe('object::', function () {
 					agentId: agentData.id,
 					createdAt: window.data.createdAt,
 					visitedAt: window.data.visitedAt,
-					program: {
-						hash: null,
-						name: null,
-						args: [],
-						calledAt: null,
-						error: null,
-						isExited: true,
-						returnValue: undefined,
-						timeout: null
-					},
+					program: null,
 					meta: { URL: null, domain: null, referrer: null, title: null },
 					rect: { width: 0, height: 0, top: 0, left: 0 },
 					dialog: { alert: null, confirm: null, prompt: null }
@@ -197,16 +189,7 @@ describe('object::', function () {
 					agentId: agent.data.id,
 					createdAt: window.data.createdAt,
 					visitedAt: window.data.createdAt,
-					program: {
-						hash: null,
-						name: null,
-						args: [],
-						calledAt: null,
-						error: null,
-						isExited: true,
-						returnValue: undefined,
-						timeout: null
-					},
+					program: null,
 					meta: {
 						URL: testString,
 						domain: testString,
@@ -303,17 +286,24 @@ describe('object::', function () {
 			it('call a new program on the last has been exited.', function () {
 				const agent = Agent.create();
 				const window = Window.create(agent.data.id);
-				
-				window.callProgram('1234', 'program.test', []);
+				const master = Master.create();
 
-				assert.deepEqual(window.data.program, {
+				master.bind(agent.data.id);
+				
+				window.callProgram('1234', 'program.test', [], 5000);
+
+				const programData = $store.program[1234];
+
+				assert.deepEqual(programData, {
 					hash: '1234',
 					name: 'program.test',
 					args: [],
-					isExited: false,
 					error: null,
 					returnValue: undefined,
-					timeout: 10000
+					calledAt: programData.calledAt,
+					masterId: master.data.id,
+					windowId: window.data.id,
+					exitedAt: null
 				});
 			});
 
@@ -321,6 +311,9 @@ describe('object::', function () {
 				assert.throws(() => {
 					const agent = Agent.create();
 					const window = Window.create(agent.data.id);
+					const master = Master.create();
+
+					master.bind(agent.data.id);
 					
 					window.callProgram('1234', 'program.test', []);
 					window.callProgram('abcd', 'program.busy', []);
@@ -332,22 +325,32 @@ describe('object::', function () {
 			it('should timeout if no exit in 1 sec.', function (done) {
 				const agent = Agent.create();
 				const window = Window.create(agent.data.id);
+				const master = Master.create();
+				
+				master.bind(agent.data.id);
 
 				window.callProgram('1234', 'program.test', [], 1000);
 
+				const programData = $store.program[1234];
+
 				setTimeout(() => {
-					assert.deepEqual(window.data.program, {
+					assert.deepEqual(programData, {
 						hash: '1234',
 						name: 'program.test',
 						args: [],
-						isExited: true,
+						exitedAt: programData.exitedAt,
+						calledAt: programData.calledAt,
+						masterId: master.data.id,
+						windowId: window.data.id,
 						error: {
 							name: 'observer',
 							message: 'The program execution is timeout or no response.'
 						},
 						returnValue: undefined,
-						timeout: 1000
 					});
+
+					assert.strictEqual(window.data.program, null);
+					assert.deepEqual(master.data.programs, ['1234']);
 
 					done();
 				}, 1500);
@@ -358,46 +361,63 @@ describe('object::', function () {
 			it('should exit with a returnValue.', function () {
 				const agent = Agent.create();
 				const window = Window.create(agent.data.id);
+				const master = Master.create();
+
+				master.bind(agent.data.id);
 				
 				window.callProgram('1234', 'program.test', []);
-				window.exitProgram(null, 'anything');
 
+				const programData = $store.program[1234];
+
+				window.exitProgram(null, 'anything');
 				assert.strictEqual(window.programWatcher, null);
-				assert.deepEqual(window.data.program, {
+				assert.deepEqual(programData, {
 					hash: '1234',
 					name: 'program.test',
 					args: [],
-					isExited: true,
+					exitedAt: programData.exitedAt,
+					calledAt: programData.calledAt,
+					masterId: master.data.id,
+					windowId: window.data.id,
 					error: null,
 					returnValue: 'anything',
-					timeout: 10000
 				});
 			});
 
 			it('should exit with a error.', function () {
 				const agent = Agent.create();
 				const window = Window.create(agent.data.id);
+				const master = Master.create();
+
+				master.bind(agent.data.id);
 				
 				window.callProgram('1234', 'program.test', []);
-				window.exitProgram('something wrong');
 
-				assert.deepEqual(window.data.program, {
+				const programData = $store.program[1234];
+
+				window.exitProgram('something wrong');
+				assert.deepEqual(programData, {
 					hash: '1234',
 					name: 'program.test',
 					args: [],
-					isExited: true,
+					exitedAt: programData.exitedAt,
+					calledAt: programData.calledAt,
+					masterId: master.data.id,
+					windowId: window.data.id,
 					error: {
 						name: 'agent',
 						message: 'something wrong'
 					},
 					returnValue: undefined,
-					timeout: 10000
 				});
 			});
 
 			it('should NOT exit if no program running.', function () {
 				const agent = Agent.create();
 				const window = Window.create(agent.data.id);
+				const master = Master.create();
+
+				master.bind(agent.data.id);
 				
 				window.callProgram('1234', 'program.test', []);
 				window.exitProgram('something wrong');
@@ -419,14 +439,7 @@ describe('object::', function () {
 					id: window.data.id,
 					meta: { title: null, URL: null, domain: null, referrer: null },
 					rect: { width: 0, height: 0, top: 0, left: 0 },
-					program: {
-						hash: null,
-						name: null,
-						args: [],
-						error: null,
-						returnValue: undefined,
-						isExited: true
-					},
+					program: null,
 					agent: {
 						id: agent.data.id,
 						masterId: null,
@@ -454,7 +467,6 @@ describe('object::', function () {
 						args: [],
 						error: null,
 						returnValue: undefined,
-						isExited: false
 					},
 					agent: {
 						id: agent.data.id,
@@ -480,6 +492,7 @@ describe('object::', function () {
 					id: masterData.id,
 					createdAt: masterData.createdAt,
 					visitedAt: masterData.visitedAt,
+					programs: [],
 					agents: {},
 					log: []
 				});
@@ -569,6 +582,17 @@ describe('object::', function () {
 
 				assert.deepStrictEqual(master.model, {
 					id: master.data.id,
+					programs: {
+						'1234': {
+							hash: '1234',
+							name: 'program.test',
+							args: [],
+							isExited: false,
+							error: null,
+							returnValue: undefined,
+							windowId: window.data.id,
+						}
+					},
 					agents: {
 						[agent1.data.id]: {
 							id: agent1.data.id,
@@ -578,14 +602,7 @@ describe('object::', function () {
 							windows: [
 								{
 									id: window.data.id,
-									program: {
-										hash: '1234',
-										name: 'program.test',
-										args: [],
-										error: null,
-										returnValue: undefined,
-										isExited: false
-									},
+									program: '1234',
 									meta: { URL: null, domain: null, referrer: null, title: null },
 									rect: { height: 0, width: 0, top: 0, left: 0 },
 									dialog: {

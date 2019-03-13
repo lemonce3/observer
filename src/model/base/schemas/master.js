@@ -10,6 +10,7 @@ exports.add = function () {
 		id: id,
 		createdAt: now,
 		visitedAt: now,
+		programs: [],
 		agents: {},
 		log: []
 	};

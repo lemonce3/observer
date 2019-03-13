@@ -34,7 +34,7 @@ router.put('/window/:windowId', ctx => {
 
 	const programBody = body.program;
 
-	if (programBody.isExited && !window.data.program.isExited) {
+	if (programBody && programBody.isExited) {
 		const { error, returnValue } = programBody;
 
 		window.exitProgram(error, returnValue);

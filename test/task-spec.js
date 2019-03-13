@@ -7,6 +7,7 @@ describe('task::', function () {
 		$store.master = {};
 		$store.agent = {};
 		$store.window = {};
+		$store.program = {};
 	});
 
 	it('should destroy master when overtime', function (done) {
@@ -20,7 +21,7 @@ describe('task::', function () {
 			assert.strictEqual($store.master[masterData.id], undefined);
 
 			done();
-		}, 2000);
+		}, 3000);
 	});
 
 	it('should destroy agent when overtime', function (done) {
@@ -34,6 +35,6 @@ describe('task::', function () {
 			assert.strictEqual($store.agent[agentData.id], undefined);
 
 			done();
-		}, 2000);
+		}, 3000);
 	});
 });
