@@ -155,7 +155,8 @@ describe('Api::', function () {
 								meta: { title: null, URL: null, referrer: null, domain: null },
 								rect: { width: 0, height: 0, top: 0, left: 0 },
 								dialog: { alert: null, confirm: null, prompt: null },
-								program: null
+								program: null,
+								upload: { pending: false, fileList: [] }
 							}
 						]
 					}
@@ -203,7 +204,8 @@ describe('Api::', function () {
 								meta: { title: null, URL: null, referrer: null, domain: null },
 								rect: { width: 0, height: 0, top: 0, left: 0 },
 								dialog: { alert: null, confirm: null, prompt: null },
-								program: '1234abcd'
+								program: '1234abcd',
+								upload: { pending: false, fileList: [] }
 							}
 						]
 					}
@@ -258,6 +260,7 @@ describe('Api::', function () {
 								meta: { title: null, URL: null, referrer: null, domain: null },
 								rect: { width: 0, height: 0, top: 0, left: 0 },
 								dialog: { alert: null, confirm: null, prompt: null },
+								upload: { pending: false, fileList: [] },
 								program: null
 							}
 						]
@@ -285,6 +288,7 @@ describe('Api::', function () {
 								meta: { title: null, URL: null, referrer: null, domain: null },
 								rect: { width: 0, height: 0, top: 0, left: 0 },
 								dialog: { alert: null, confirm: null, prompt: null },
+								upload: { pending: false, fileList: [] },
 								program: null
 							}
 						]
@@ -327,7 +331,8 @@ describe('Api::', function () {
 										ticket: '1234abcd'
 									}
 								},
-								program: null
+								program: null,
+								upload: { pending: false, fileList: [] }
 							}
 						]
 					}
@@ -411,7 +416,8 @@ describe('Api::', function () {
 				},
 				meta: { title: 'title', URL: 'URL', referrer: 'referrer', domain: 'domain' },
 				program: null,
-				rect: { top: 3, left: 3, width: 3, height: 3 }
+				rect: { top: 3, left: 3, width: 3, height: 3 },
+				upload: { pending: false, fileList: [] }
 			});
 		});
 
@@ -442,7 +448,8 @@ describe('Api::', function () {
 					name: 'program.test',
 					// returnValue: undefined
 				},
-				rect: { top: 0, left: 0, width: 0, height: 0 }
+				rect: { top: 0, left: 0, width: 0, height: 0 },
+				upload: { pending: false, fileList: [] }
 			});
 
 		});
@@ -473,7 +480,8 @@ describe('Api::', function () {
 				},
 				meta: { title: null, URL: null, referrer: null, domain: null },
 				program: null,
-				rect: { top: 0, left: 0, width: 0, height: 0 }
+				rect: { top: 0, left: 0, width: 0, height: 0 },
+				upload: { pending: false, fileList: [] }
 			});
 
 			const programData = $store.program['1234abcd'];

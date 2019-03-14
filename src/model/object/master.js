@@ -4,7 +4,7 @@ const _ = require('lodash');
 const localKeys = ['id', 'agents', 'programs'];
 const agentKeys = ['id', 'modifier', 'pointer', 'ua'];
 const programKeys = ['hash', 'name', 'args', 'error', 'returnValue', 'windowId'];
-const windowKeys = ['id', 'meta', 'rect', 'dialog', 'program'];
+const windowKeys = ['id', 'meta', 'rect', 'upload', 'dialog', 'program'];
 
 module.exports = class Master {
 	constructor(data) {

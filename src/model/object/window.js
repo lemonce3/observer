@@ -1,7 +1,7 @@
 const db = require('../base');
 const _ = require('lodash');
 
-const localKeys = ['id', 'meta', 'rect'];
+const localKeys = ['id', 'meta', 'rect', 'upload'];
 const programKeys = ['hash', 'name', 'args', 'error', 'returnValue'];
 const agentKeys = ['id', 'masterId', 'modifier', 'pointer'];
 
@@ -49,6 +49,10 @@ module.exports = class Window {
 			throw new Error('Window is busy with program.');
 		}
 
+		if (this.data.upload.pending === true) {
+			throw new Error('The window MUST be resovled upload first.');
+		}
+
 		const programData = db.program.add({
 			hash, name, args,
 			windowId: this.data.id,
@@ -91,8 +95,16 @@ module.exports = class Window {
 
 		return this;
 	}
+
+	upload(fileList = []) {
+		if (this.data.upload.pending !== true) {
+			throw new Error('The window is NOT waiting upload.');
+		}
+
+		this.data.upload.fileList = fileList;
+	}
 	
-	update({ meta, rect }) {
+	update({ meta, rect, upload }) {
 		Object.assign(this.data.meta, {
 			title: meta.title,
 			URL: meta.URL,
@@ -106,6 +118,12 @@ module.exports = class Window {
 			top: parseInt(rect.top),
 			left: parseInt(rect.left)
 		});
+
+		this.data.upload.pending = upload.pending;
+
+		if (upload.pending === false) {
+			this.upload.fileList = [];
+		}
 
 		return this;
 	}

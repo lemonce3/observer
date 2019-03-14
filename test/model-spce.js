@@ -149,7 +149,11 @@ describe('object::', function () {
 					program: null,
 					meta: { URL: null, domain: null, referrer: null, title: null },
 					rect: { width: 0, height: 0, top: 0, left: 0 },
-					dialog: { alert: null, confirm: null, prompt: null }
+					dialog: { alert: null, confirm: null, prompt: null },
+					upload: {
+						pending: false,
+						fileList: []
+					}
 				});
 			});
 		});
@@ -181,7 +185,8 @@ describe('object::', function () {
 	
 				window.update({
 					meta: { title: testString, URL: testString, referrer: testString, domain: testString },
-					rect: { width: 1, height: 1, top: 1, left: 1 }
+					rect: { width: 1, height: 1, top: 1, left: 1 },
+					upload: { pending: true, fileList: [] }
 				});
 	
 				assert.deepStrictEqual($store.window[windowId], {
@@ -196,6 +201,10 @@ describe('object::', function () {
 						referrer: testString,
 						title: testString,
 					},
+					upload: {
+						pending: true,
+						fileList: []
+					},
 					rect: {
 						width: 1,
 						height: 1,
@@ -209,6 +218,8 @@ describe('object::', function () {
 					}
 				});
 			});
+
+			it('empty upload fileList to [] if set pending false');
 		});
 
 		describe('#destroy()', function () {
@@ -280,6 +291,11 @@ describe('object::', function () {
 					prompt: null
 				});
 			});
+		});
+
+		describe('#upload', function () {
+			it('should upload when pending');
+			it('should NOT upload when not pending');
 		});
 
 		describe('#callProgram', function () {
@@ -445,7 +461,8 @@ describe('object::', function () {
 						masterId: null,
 						modifier: { ctrl: false, shift: false, alt: false, meta: false },
 						pointer: { x: 0, y: 0 }
-					}
+					},
+					upload: { pending: false, fileList: [] }
 				});
 			});
 
@@ -473,7 +490,8 @@ describe('object::', function () {
 						masterId: master.data.id,
 						modifier: { ctrl: false, shift: false, alt: false, meta: false },
 						pointer: { x: 0, y: 0 }
-					}
+					},
+					upload: { pending: false, fileList: [] }
 				});
 			});
 		});
@@ -612,7 +630,8 @@ describe('object::', function () {
 											ticket: '1234abcd'
 										},
 										prompt: null
-									}
+									},
+									upload: { pending: false, fileList: [] }
 								}
 							]
 						},
@@ -626,6 +645,11 @@ describe('object::', function () {
 					}
 				});
 			});
+		});
+
+		describe('#deleteProgram', function () {
+			it('could delete a exited program');
+			it('could NOT delete a exited program');
 		});
 	});
 });

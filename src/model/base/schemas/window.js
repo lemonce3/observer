@@ -17,7 +17,11 @@ exports.addToAgent = function (agentId) {
 		program: null,
 		meta: { title: null, URL: null, referrer: null, domain: null },
 		rect: { width: 0, height: 0, top: 0, left: 0 }, //TODO screen
-		dialog: { alert: null, confirm: null, prompt: null }
+		dialog: { alert: null, confirm: null, prompt: null },
+		upload: {
+			pending: false,
+			fileList: [] //TODO null
+		}
 	};
 
 	agentData.windows.push(windowId);
