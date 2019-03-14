@@ -43,17 +43,21 @@ router.put('/window/:windowId', ctx => {
 	ctx.body = window.model;
 });
 
-router.del('/window/:windowId', ctx => {
+router.del('/window/:windowId', async ctx => {
 	const { windowId } = ctx.params;
 	const window = Window.select(windowId);
 
 	if (window === null) {
-		return ctx.throw(404, 'Window is NOT found.');
+		return ctx.throw(404, `Window[${windowId}] is NOT found.`);
 	}
 
-	ctx.body = window.model;
-	
-	window.destroy();
+	return new Promise(resolve => {
+		ctx.req.on('aborted', () => {
+			console.log(1111);
+			window.destroy();
+			resolve();
+		});
+	});
 });
 
 router.post('/window/:windowId/dialog', async ctx => {
