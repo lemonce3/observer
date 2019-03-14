@@ -12,7 +12,7 @@ router.get('/agent.html', ctx => {
 	let agent = null;
 	
 	if (!agentId || !(agent = Agent.selectById(agentId))) {
-		agent = Agent.create(ctx.request.header['User-Agent']);
+		agent = Agent.create(ctx.request.header['user-agent']);
 		ctx.cookies.set(COOKIE_KEY, agent.data.id, { httpOnly: false, maxAge: 0 });
 	}
 

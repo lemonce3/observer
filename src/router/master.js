@@ -13,7 +13,7 @@ router.post('/master', ctx => {
 		return ctx.throw(400, 'Agents must be an array.');
 	}
 
-	if (agents.find(agentId => Agent.selectById(agentId) === null)) {
+	if (!agents.find(agentId => Agent.selectById(agentId))) {
 		return ctx.throw(404, 'A specific agent is NOT found.');
 	}
 
