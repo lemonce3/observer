@@ -9,7 +9,7 @@ function Rect() {//TODO screen
 	return { width: 0, height: 0, top: 0, left: 0 };
 }
 
-exports.addToAgent = function (agentId, id, meta = Meta(), rect = Rect()) {
+exports.addToAgent = function (agentId, id, doc, meta = Meta(), rect = Rect()) {
 	if (!_.isNumber(agentId)) {
 		throw new Error('AgentId MUST be a number.');
 	}
@@ -17,7 +17,7 @@ exports.addToAgent = function (agentId, id, meta = Meta(), rect = Rect()) {
 	const now = Date.now();
 	const agentData = store.agent[agentId];
 	const windowData = store.window[id] = {
-		id,
+		id, doc, 
 		agentId,
 		createdAt: now,
 		visitedAt: now,

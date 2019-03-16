@@ -12,16 +12,29 @@ module.exports = class Agent {
 		return this;
 	}
 
-	allocateWindowId() {
-		const id = this.data.lastWindowId || Math.random().toString(16).substr(2, 8);
+	allocateWindow(doc) {
+		const lastWindow = this.data.lastWindow;
 
-		this.data.lastWindowId = null;
+		if (lastWindow) {
+			if (!doc) {
+				lastWindow.doc++;
+			}
 
-		return id;
+			this.data.lastWindow = null;
+
+			return lastWindow;
+		}
+
+		return {
+			id: Math.random().toString(16).substr(2, 8),
+			doc: 1
+		};
 	}
 
-	freeWindowId(value) {
-		return this.data.lastWindowId = value;
+	freeWindow(id, doc) {
+		return this.data.lastWindow = {
+			id, doc
+		};
 	}
 
 	update({ modifier, pointer }) {

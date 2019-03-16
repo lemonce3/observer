@@ -1,7 +1,7 @@
 const db = require('../base');
 const _ = require('lodash');
 
-const localKeys = ['id', 'meta', 'rect', 'upload'];
+const localKeys = ['id', 'doc', 'meta', 'rect', 'upload'];
 const programKeys = ['hash', 'name', 'args', 'error', 'returnValue'];
 const agentKeys = ['id', 'masterId', 'modifier', 'pointer'];
 
@@ -134,8 +134,8 @@ module.exports = class Window {
 		return this;
 	}
 
-	static create(agentId, id, meta, rect) {
-		return new this(db.window.addToAgent(agentId, id, meta, rect));
+	static create(agentId, id, doc, meta, rect) {
+		return new this(db.window.addToAgent(agentId, id, doc, meta, rect));
 	}
 
 	static select(id) {
