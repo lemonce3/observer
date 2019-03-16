@@ -12,6 +12,18 @@ module.exports = class Agent {
 		return this;
 	}
 
+	allocateWindowId() {
+		const id = this.data.lastWindowId || Math.random().toString(16).substr(2, 8);
+
+		this.data.lastWindowId = null;
+
+		return id;
+	}
+
+	freeWindowId(value) {
+		return this.data.lastWindowId = value;
+	}
+
 	update({ modifier, pointer }) {
 		Object.assign(this.data.modifier, {
 			ctrl: Boolean(modifier.ctrl),

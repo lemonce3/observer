@@ -12,6 +12,7 @@ exports.add = function (ua = null) {
 		visitedAt: now,
 		ua,
 		masterId: null,
+		lastWindowId: null,
 		modifier: {
 			ctrl: false,
 			shift: false,

@@ -45,9 +45,9 @@ module.exports = class Window {
 	}
 
 	callProgram(hash, name, args = [], timeout = 10000) {
-		if (this.data.program) {
-			throw new Error('Window is busy with program.');
-		}
+		// if (this.data.program) {
+		// 	throw new Error('Window is busy with program.');
+		// }
 
 		if (this.data.upload.pending === true) {
 			throw new Error('The window MUST be resovled upload first.');
@@ -134,8 +134,8 @@ module.exports = class Window {
 		return this;
 	}
 
-	static create(agentId) {
-		return new this(db.window.addToAgent(agentId));
+	static create(agentId, id, meta, rect) {
+		return new this(db.window.addToAgent(agentId, id, meta, rect));
 	}
 
 	static select(id) {

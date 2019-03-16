@@ -7,17 +7,19 @@ const { Window, Agent } = require('../model');
 const DIALOG_TIMEOUT = 10000;
 
 router.post('/window', ctx => {
-	const { agentId } = ctx.request.body;
+	const { agentId, meta, rect } = ctx.request.body;
 
 	if (!_.isNumber(agentId)) {
 		return ctx.status = 400;
 	}
 
-	if (Agent.selectById(agentId) === null) {
+	const agent = Agent.selectById(agentId);
+
+	if (agent === null) {
 		return ctx.throw(404, 'Agent is NOT found.');
 	}
 
-	ctx.body = Window.create(agentId).model;
+	ctx.body = Window.create(agentId, agent.allocateWindowId(), meta, rect).model;
 });
 
 router.put('/window/:windowId', ctx => {
@@ -50,10 +52,12 @@ router.del('/window/:windowId', async ctx => {
 	if (window === null) {
 		return ctx.throw(404, `Window[${windowId}] is NOT found.`);
 	}
+	
+	const agent = Agent.selectById(window.data.agentId);
 
 	return new Promise(resolve => {
 		ctx.req.on('aborted', () => {
-			console.log(1111);
+			agent.freeWindowId(window.data.id);
 			window.destroy();
 			resolve();
 		});

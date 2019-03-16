@@ -1,22 +1,29 @@
 const _ = require('lodash');
 const store = require('../store');
 
-exports.addToAgent = function (agentId) {
+function Meta() {
+	return { title: null, URL: null, referrer: null, domain: null };
+}
+
+function Rect() {//TODO screen
+	return { width: 0, height: 0, top: 0, left: 0 };
+}
+
+exports.addToAgent = function (agentId, id, meta = Meta(), rect = Rect()) {
 	if (!_.isNumber(agentId)) {
 		throw new Error('AgentId MUST be a number.');
 	}
 
-	const windowId = Math.random().toString(16).substr(2, 8);
 	const now = Date.now();
 	const agentData = store.agent[agentId];
-	const windowData = store.window[windowId] = {
-		id: windowId,
+	const windowData = store.window[id] = {
+		id,
 		agentId,
 		createdAt: now,
 		visitedAt: now,
 		program: null,
-		meta: { title: null, URL: null, referrer: null, domain: null },
-		rect: { width: 0, height: 0, top: 0, left: 0 }, //TODO screen
+		meta,
+		rect, 
 		dialog: { alert: null, confirm: null, prompt: null },
 		upload: {
 			pending: false,
@@ -24,7 +31,7 @@ exports.addToAgent = function (agentId) {
 		}
 	};
 
-	agentData.windows.push(windowId);
+	agentData.windows.push(id);
 	
 	return windowData;
 };
