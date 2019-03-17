@@ -11,6 +11,15 @@ const app = new Koa();
 app.context.OBSERVER_HASH = Math.random().toString(16).substr(2, 8);
 app.context.dialog = {};
 
+const fileRouter = /\/file/;
+
+app.use(async (ctx, next) => {
+	if (fileRouter.test(ctx.path)) {
+		ctx.disableBodyParser = true;
+	};
+
+	return next();
+});
 app.use(bodyparser());
 app.use(router.routes());
 app.use(serve(path.resolve(config.static.path)));

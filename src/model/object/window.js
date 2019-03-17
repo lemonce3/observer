@@ -49,9 +49,9 @@ module.exports = class Window {
 		// 	throw new Error('Window is busy with program.');
 		// }
 
-		if (this.data.upload.pending === true) {
-			throw new Error('The window MUST be resovled upload first.');
-		}
+		// if (this.data.upload.pending === true) {
+		// 	throw new Error('The window MUST be resovled upload first.');
+		// }
 
 		const programData = db.program.add({
 			hash, name, args,

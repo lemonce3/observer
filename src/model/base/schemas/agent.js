@@ -41,6 +41,10 @@ exports.del = function (id) {
 };
 
 store.on('window-delete', windowData => {
+	if (!windowData) {
+		return;
+	}
+
 	const agentData = store.agent[windowData.agentId];
 
 	if (agentData) {
