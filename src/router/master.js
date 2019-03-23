@@ -93,25 +93,3 @@ router.del('/master/:masterId', ctx => {
 	ctx.body = master.model;
 	master.destroy();
 });
-
-// router.get('/master/:masterId/log', ctx => {
-// 	const { masterId } = ctx.params;
-// 	const master = Master.select(masterId);
-
-// 	if (!master) {
-// 		ctx.throw(404, `Master(id:${masterId} is NOT found.)`);
-// 	}
-
-// 	ctx.body = master.data.log;
-// });
-
-// router.post('/master/:masterId/log', ctx => {
-// 	const { masterId } = ctx.params;
-// 	const master = Master.select(masterId);
-
-// 	if (!master) {
-// 		ctx.throw(404, `Master(id:${masterId} is NOT found.)`);
-// 	}
-
-// 	ctx.body = master.data.log;
-// });

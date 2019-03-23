@@ -12,7 +12,6 @@ exports.add = function () {
 		visitedAt: now,
 		programs: [],
 		agents: {},
-		log: []
 	};
 };
 
